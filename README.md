@@ -17,8 +17,18 @@ Moreover, in some cases, it could be really complicated if not impossible
 
 # HOW
 
-Integrate this repository in the one you want to generate the `CHANGELOG.md` for as a submodule.
-Configure the thing and invoke the tool. That's it.
+## To generate a CHANGELOG.md file
+
+You can either:
+- Integrate this repository in the one you want to generate the `CHANGELOG.md`
+  for as a submodule.
+- Keep this repository separated from the one you want to generate the
+  `CHANGELOG.md` file and use its tool
+
+## Run all tests of this repository
+
+Go into the `test` directory and execute the `run-all-tests.sh` scripts.
+You'll need docker for this.
 
 # WHEN
 
