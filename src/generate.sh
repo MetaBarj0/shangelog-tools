@@ -13,13 +13,27 @@ if [ $commit_count -lt 1 ]; then
   exit 1
 fi
 
-changelog_compliant_commits=\
-  $(git rev-list \
-      --all -E -i --grep \
-      '^(feat|fix|chore|build|ci|test|docs|style|refactor|perf|revert)(\(.+\))?!?: [^ ].*')
+changelog_compliant_commits="$(git rev-list \
+  --all -E -i --grep \
+  '^(feat|fix|chore|build|ci|test|docs|style|refactor|perf|revert)(\(.+\))?!?: [^ ].*')"
 
 
 if [ -z $changelog_compliant_commits ]; then
   echo 'Error: no suitable commit found to generate the change log'
   exit 1
 fi
+
+cat << EOF
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### chore
+
+- Initial commit
+EOF

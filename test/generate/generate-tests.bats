@@ -14,6 +14,12 @@ setup() {
   cd /root/src
 }
 
+teardown() {
+  rm -rf /root/src
+
+  cd /root/ringover-shangelog-tools
+}
+
 @test "generate fails with '1' if not run within a git repository" {
   run -1 generate.sh
 
@@ -35,22 +41,48 @@ create_git_repository() {
   assert_output 'Error: the git repository does not contain any commit'
 }
 
-create_non_conventional_commit() {
-  git add generate.sh
-  git commit -m 'non conventional commit'
+commit_with_message() {
+  local message="$1"
+
+  touch messages
+  echo "$message" >> messages
+  git add messages
+  git commit -m "$message"
 }
 
 @test "generate fails if it does not find any conventional commit in the history" {
   create_git_repository
-  create_non_conventional_commit
+  commit_with_message 'non conventipnal commit'
 
   run -1 generate.sh
 
   assert_output 'Error: no suitable commit found to generate the change log'
 }
 
-teardown() {
-  rm -rf /root/src
+@test "generate succeeds in create a one unreleased entry change log" {
+  create_git_repository
+  commit_with_message "$(cat << EOF
+chore: Initial commit
+EOF
+)"
+  local expected_output="$(cat << EOF
+# Changelog
 
-  cd /root/ringover-shangelog-tools
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### chore
+
+- Initial commit
+EOF
+)"
+  commit_with_message 'non conventional commit at the tip of the branch'
+
+  run generate.sh
+
+  assert_output "$expected_output"
 }
