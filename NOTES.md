@@ -55,6 +55,11 @@ Besides, alert on tag found that are not annotated.
 - filter all commits that are conventional ones
 - Alert if there are non conventional commits
 
+### Extract summary info from conventional commit
+
+- Extract the type, the scope and the description:
+  `git show -s --pretty=format:%s <sha1>`
+
 ## Generating the CHANGELOG.md file
 
 - Stateless by design:

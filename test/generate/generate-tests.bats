@@ -10,6 +10,8 @@ setup() {
   load '../test_helper/bats-support/load'
   load '../test_helper/bats-assert/load'
 
+  load 'helpers/git_repository_helpers.sh'
+
   cp -r src /root
   cd /root/src
 }
@@ -26,28 +28,12 @@ teardown() {
   assert_output 'Error: this script must be run within a git repository'
 }
 
-create_git_repository() {
-  git init > /dev/null 2>&1
-
-  git config user.email "bats@test.suite"
-  git config user.name "bats"
-}
-
 @test "generate fails in a git repository without any commit" {
   create_git_repository
 
   run -1 generate.sh
 
   assert_output 'Error: the git repository does not contain any commit'
-}
-
-commit_with_message() {
-  local message="$1"
-
-  touch messages
-  echo "$message" >> messages
-  git add messages
-  git commit -m "$message"
 }
 
 @test "generate fails if it does not find any conventional commit in the history" {
@@ -59,12 +45,29 @@ commit_with_message() {
   assert_output 'Error: no suitable commit found to generate the change log'
 }
 
-@test "generate succeeds in create a one unreleased entry change log" {
+@test "generate fails if there is pending changes in the repository" {
   create_git_repository
-  commit_with_message "$(cat << EOF
-chore: Initial commit
+  commit_with_message 'chore: First conventional chore commit'
+  touch pending.txt
+  git add pending.txt
+  expected_output="$(cat << EOF
+Error: there are pending changes in the repository. Commit, discard or stash
+them before going any further.
 EOF
 )"
+
+  run -1 generate.sh
+
+  assert_output "$expected_output"
+}
+
+@test "generate succeeds to create several unreleased chore entries change log" {
+  create_git_repository
+  commit_with_message 'chore: Initial commit'
+  commit_with_message 'chore: Second commit'
+  commit_with_message 'non conventional commit in the branch'
+  commit_with_message 'chore: Third commit'
+
   local expected_output="$(cat << EOF
 # Changelog
 
@@ -78,9 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### chore
 
 - Initial commit
+- Second commit
+- Third commit
 EOF
 )"
-  commit_with_message 'non conventional commit at the tip of the branch'
 
   run generate.sh
 
