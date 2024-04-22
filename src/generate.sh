@@ -74,7 +74,9 @@ generate_commit_type_content() {
     local commit_line="$( \
       echo $commit_summary \
         | sed -E \
-        's/^('"${generate_conventional_commit_type_regex}"')(\(.+\))?: ([^ ].*)/- \3/')"
+        's/^('"${generate_conventional_commit_type_regex}"')(\(.+\))?: ([^ ].*)/- \2 \3/' \
+        | sed -E 's/-  (.+)/- \1/'
+    )"
 
     commit_lines="$(cat << EOF
 ${commit_lines}

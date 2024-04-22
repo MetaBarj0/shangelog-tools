@@ -51,7 +51,10 @@ teardown() {
 
 @test "generate fails if it does not find any conventional commit in the history" {
   create_git_repository
-  commit_with_message 'non conventipnal commit'
+  commit_with_message 'non conventional commit'
+  commit_with_message 'chore:'
+  commit_with_message 'chore:       too much spaces'
+  commit_with_message 'chore(scope):       too much spaces'
 
   run -1 generate.sh
 
@@ -63,7 +66,7 @@ teardown() {
   commit_with_message 'chore: Initial commit'
   commit_with_message 'chore: Second commit'
   commit_with_message 'non conventional commit in the branch'
-  commit_with_message 'chore: Third commit'
+  commit_with_message 'chore(arbitrary scope): Third commit'
 
   local expected_output="$(cat << EOF
 # Changelog
@@ -79,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial commit
 - Second commit
-- Third commit
+- (arbitrary scope) Third commit
 EOF
 )"
 
@@ -92,9 +95,9 @@ EOF
   skip 'This test needs other feature to be implemented'
   create_git_repository
   commit_with_message 'feat: Initial commit'
-  commit_with_message 'feat: Second commit'
+  commit_with_message 'feat(a scope): Second commit'
   commit_with_message 'non conventional commit in the branch'
-  commit_with_message 'feat: Third commit'
+  commit_with_message 'feat(last scope): Third commit'
 
   local expected_output="$(cat << EOF
 # Changelog
@@ -109,8 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### feat
 
 - Initial commit
-- Second commit
-- Third commit
+- (a scope) Second commit
+- (last scope) Third commit
 EOF
 )"
 
