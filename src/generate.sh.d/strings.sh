@@ -17,7 +17,7 @@ generate_error_no_conventional_commit_found=\
 'Error: no conventional commit found to generate the change log'
 
 generate_conventional_commit_type_regex=\
-'chore|feat'
+'fix|feat|build|chore|ci|docs|style|refactor|perf|test'
 
 generate_changelog_header=\
 "$(cat << EOF

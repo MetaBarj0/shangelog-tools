@@ -128,3 +128,29 @@ EOF
 - \(a chore scope\) Second commit, chore one
 - \(style\) reformat, more stylish'
 }
+
+@test "generates support all conventional commit type, including Angular convention" {
+  create_git_repository
+  commit_with_message 'fix: a fix commit'
+  commit_with_message 'feat: a feat commit'
+  commit_with_message 'build: a build commit'
+  commit_with_message 'chore: a chore commit'
+  commit_with_message 'ci: a ci commit'
+  commit_with_message 'docs: a docs commit'
+  commit_with_message 'style: a style commit'
+  commit_with_message 'refactor: a refactor commit'
+  commit_with_message 'perf: a perf commit'
+  commit_with_message 'test: a test commit'
+
+  run generate.sh
+
+  ensure_match "$output" $'### fix\n\n- a fix commit'
+  ensure_match "$output" $'### feat\n\n- a feat commit'
+  ensure_match "$output" $'### build\n\n- a build commit'
+  ensure_match "$output" $'### ci\n\n- a ci commit'
+  ensure_match "$output" $'### docs\n\n- a docs commit'
+  ensure_match "$output" $'### style\n\n- a style commit'
+  ensure_match "$output" $'### refactor\n\n- a refactor commit'
+  ensure_match "$output" $'### perf\n\n- a perf commit'
+  ensure_match "$output" $'### test\n\n- a test commit'
+}
