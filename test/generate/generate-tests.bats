@@ -74,9 +74,9 @@ ${generate_changelog_header}
 
 ### chore
 
-- Initial commit
-- Second commit
 - (arbitrary scope) Third commit
+- Second commit
+- Initial commit
 EOF
 )"
 
@@ -97,9 +97,9 @@ ${generate_changelog_header}
 
 ### feat
 
-- Initial commit
-- (a scope) Second commit
 - (last scope) Third commit
+- (a scope) Second commit
+- Initial commit
 EOF
 )"
 
@@ -120,13 +120,13 @@ EOF
 
   ensure_match "$output" '### feat
 
-- Initial commit
-- \(last feature\) latest fancy feature'
+- \(last feature\) latest fancy feature
+- Initial commit'
 
   ensure_match "$output" '### chore
 
-- \(a chore scope\) Second commit, chore one
-- \(style\) reformat, more stylish'
+- \(style\) reformat, more stylish
+- \(a chore scope\) Second commit, chore one'
 }
 
 @test "generates support all conventional commit type, including Angular convention" {
@@ -144,13 +144,14 @@ EOF
 
   run generate.sh
 
-  ensure_match "$output" $'### fix\n\n- a fix commit'
-  ensure_match "$output" $'### feat\n\n- a feat commit'
-  ensure_match "$output" $'### build\n\n- a build commit'
-  ensure_match "$output" $'### ci\n\n- a ci commit'
-  ensure_match "$output" $'### docs\n\n- a docs commit'
-  ensure_match "$output" $'### style\n\n- a style commit'
-  ensure_match "$output" $'### refactor\n\n- a refactor commit'
-  ensure_match "$output" $'### perf\n\n- a perf commit'
   ensure_match "$output" $'### test\n\n- a test commit'
+  ensure_match "$output" $'### perf\n\n- a perf commit'
+  ensure_match "$output" $'### refactor\n\n- a refactor commit'
+  ensure_match "$output" $'### style\n\n- a style commit'
+  ensure_match "$output" $'### docs\n\n- a docs commit'
+  ensure_match "$output" $'### ci\n\n- a ci commit'
+  ensure_match "$output" $'### chore\n\n- a chore commit'
+  ensure_match "$output" $'### build\n\n- a build commit'
+  ensure_match "$output" $'### feat\n\n- a feat commit'
+  ensure_match "$output" $'### fix\n\n- a fix commit'
 }

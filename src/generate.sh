@@ -29,7 +29,7 @@ ensure_there_are_no_pending_changes() {
 
 list_changelog_compliant_commits() {
   git rev-list \
-    --all --reverse -E -i --grep \
+    --all -E -i --grep \
     "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*"
 }
 
