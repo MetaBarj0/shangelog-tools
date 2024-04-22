@@ -61,20 +61,24 @@ EOF
 
 generate_commit_type_header() {
   cat << EOF
-### chore
+### $1
 EOF
 }
 
-generate_commit_type_content() {
+generate_commit_type_content_for() {
+  local commit_type="$1"
   local commit_lines=
   local commit_sha1=
 
+  # TODO: deduplicate regex
   while read commit_sha1; do
     local commit_summary="$(git show -s --pretty='format:%s' $commit_sha1)"
     local commit_line="$( \
       echo $commit_summary \
+        | grep -E \
+        '^('"${commit_type}"')(\(.+\))?: ([^ ].*)' \
         | sed -E \
-        's/^('"${generate_conventional_commit_type_regex}"')(\(.+\))?: ([^ ].*)/- \2 \3/' \
+        's/^('"${commit_type}"')(\(.+\))?: ([^ ].*)/- \2 \3/' \
         | sed -E 's/-  (.+)/- \1/'
     )"
 
@@ -87,22 +91,49 @@ EOF
 $(list_changelog_compliant_commits)
 EOF
 
-  echo "$commit_lines"
+  echo "$commit_lines" | sed -E '/^$/d'
 }
 
 output_changelog() {
   local changelog_header="$(generate_changelog_header)"
   local unreleased_header="$(generate_unreleased_header)"
-  local commit_type_header="$(generate_commit_type_header)"
-  local commit_type_content="$(generate_commit_type_content)"
-
-  cat << EOF
+  local top_of_changelog="$(cat << EOF
 ${changelog_header}
 
 ${unreleased_header}
+EOF
+  )"
 
-${commit_type_header}
-${commit_type_content}
+  while read -d '|' commit_type; do
+    local commit_type_header="$(generate_commit_type_header $commit_type)"
+    local commit_type_content="$(generate_commit_type_content_for $commit_type)"
+
+    if [ -z "${commit_type_content}" ]; then
+      continue
+    fi
+
+    eval "local ${commit_type}_paragraph=\"\$(cat << EOF
+\${commit_type_header}
+
+\${commit_type_content}
+EOF
+)\""
+  done << EOF
+$(echo $generate_conventional_commit_type_regex)|
+EOF
+
+  echo "${top_of_changelog}"$'\n'
+
+  while read -d '|' commit_type; do
+    eval "local paragraph=\"\${${commit_type}_paragraph}\""
+
+    if [ -z "${paragraph}" ]; then
+      continue
+    fi
+
+    echo "${paragraph}"
+  done << EOF
+$(echo $generate_conventional_commit_type_regex)|
 EOF
 }
 

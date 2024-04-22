@@ -92,7 +92,6 @@ EOF
 }
 
 @test "generate succeeds to create several unreleased feat entries change log" {
-  skip 'This test needs other feature to be implemented'
   create_git_repository
   commit_with_message 'feat: Initial commit'
   commit_with_message 'feat(a scope): Second commit'
