@@ -1,7 +1,7 @@
 #!/bin/sh
 
-generate_error_not_git_repository=\
-'Error: this script must be run within a git repository'
+generate_error_cannot_bind_git_repository=\
+'Error: cannot bind to a valid git repository'
 
 generate_error_no_commits=\
 'Error: the git repository does not contain any commit'

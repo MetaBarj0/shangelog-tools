@@ -4,7 +4,7 @@ ensure_within_git_repository() {
   git status > /dev/null 2>&1
 
   if [ $? -ne 0 ]; then
-    echo "${generate_error_not_git_repository}" >&2
+    echo "${generate_error_cannot_bind_git_repository}" >&2
     exit 1
   fi
 }
@@ -123,7 +123,17 @@ output_changelog() {
 }
 
 main() {
-  source ./generate.sh.d/strings.sh
+  # TODO: refacto in function
+  local script_dirname="$(dirname "$0")"
+  cd "$script_dirname" >/dev/null 2>&1
+  local script_dir="$(pwd -P)"
+  cd - >/dev/null 2>&1
+
+  source "${script_dir}/generate.sh.d/strings.sh"
+
+  if [ ! -z "$1" ]; then
+    cd "$1"
+  fi
 
   ensure_within_git_repository
   ensure_there_are_commits
@@ -133,4 +143,4 @@ main() {
   output_changelog
 }
 
-main
+main $@

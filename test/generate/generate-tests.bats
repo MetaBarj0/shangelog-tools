@@ -28,7 +28,7 @@ teardown() {
 @test "generate fails with '1' if not run within a git repository" {
   run -1 generate.sh
 
-  assert_output "${generate_error_not_git_repository}"
+  assert_output "${generate_error_cannot_bind_git_repository}"
 }
 
 @test "generate fails in a git repository without any commit" {
@@ -154,4 +154,35 @@ EOF
   ensure_match "$output" $'### build\n\n- a build commit'
   ensure_match "$output" $'### feat\n\n- a feat commit'
   ensure_match "$output" $'### fix\n\n- a fix commit'
+}
+
+@test "generate must fail if invoked outside of a git repository and the current directory is not a git repository" {
+  cd /root
+
+  run -1 ringover-shangelog-tools/src/generate.sh
+
+  assert_output "${generate_error_cannot_bind_git_repository}"
+}
+
+@test "generate must succeed when invoked outside a git repository and the current directory is a git repository" {
+  mkdir -p inner_git_dir
+  cd inner_git_dir
+  create_git_repository
+  commit_with_message 'chore: a first commit'
+
+  run ../generate.sh
+
+  assert_success
+}
+
+@test "generate must succeed when invoked outside a git repository, the current directory is not a git repository and the script argument is a git repository" {
+  mkdir -p inner_git_dir
+  cd inner_git_dir
+  create_git_repository
+  commit_with_message 'chore: a first commit'
+  cd -
+
+  run generate.sh inner_git_dir
+
+  assert_success
 }
