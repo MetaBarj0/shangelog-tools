@@ -108,7 +108,7 @@ output_all_commit_type_paragraphs() {
       continue
     fi
 
-    echo "${paragraph}"
+    echo $'\n'"${paragraph}"
   done << EOF
 $(echo $generate_conventional_commit_type_regex)|
 EOF
@@ -117,7 +117,7 @@ EOF
 output_changelog() {
   initialize_all_commit_type_variables
 
-  echo "${generate_changelog_header}"$'\n'
+  echo "${generate_changelog_header}"
 
   output_all_commit_type_paragraphs
 }

@@ -106,3 +106,31 @@ EOF
 
   assert_output "$expected_output"
 }
+
+@test "generates handles correctly interleaved conventional commit types" {
+  create_git_repository
+  commit_with_message 'feat: Initial commit'
+  commit_with_message 'chore(a chore scope): Second commit, chore one'
+  commit_with_message 'non conventional commit in the branch'
+  commit_with_message 'feat(last feature): latest fancy feature'
+  commit_with_message 'chore(style): reformat, more stylish'
+
+  local expected_output="$(cat << EOF
+${generate_changelog_header}
+
+### feat
+
+- Initial commit
+- (last feature) latest fancy feature
+
+### chore
+
+- (a chore scope) Second commit, chore one
+- (style) reformat, more stylish
+EOF
+)"
+
+  run generate.sh
+
+  assert_output "$expected_output"
+}
