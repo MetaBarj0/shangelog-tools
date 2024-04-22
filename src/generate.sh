@@ -42,23 +42,6 @@ ensure_there_are_at_least_one_conventional_commit() {
   fi
 }
 
-generate_changelog_header() {
-  cat << EOF
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-EOF
-}
-
-generate_unreleased_header() {
-  cat << EOF
-## [Unreleased]
-EOF
-}
-
 generate_commit_type_header() {
   cat << EOF
 ### $1
@@ -70,15 +53,15 @@ generate_commit_type_content_for() {
   local commit_lines=
   local commit_sha1=
 
-  # TODO: deduplicate regex
   while read commit_sha1; do
     local commit_summary="$(git show -s --pretty='format:%s' $commit_sha1)"
+    local conventional_commit_header='^('"${commit_type}"')(\(.+\))?: ([^ ].*)'
     local commit_line="$( \
       echo $commit_summary \
         | grep -E \
-        '^('"${commit_type}"')(\(.+\))?: ([^ ].*)' \
+        "${conventional_commit_header}" \
         | sed -E \
-        's/^('"${commit_type}"')(\(.+\))?: ([^ ].*)/- \2 \3/' \
+        's/'"${conventional_commit_header}"'/- \2 \3/' \
         | sed -E 's/-  (.+)/- \1/'
     )"
 
@@ -94,16 +77,7 @@ EOF
   echo "$commit_lines" | sed -E '/^$/d'
 }
 
-output_changelog() {
-  local changelog_header="$(generate_changelog_header)"
-  local unreleased_header="$(generate_unreleased_header)"
-  local top_of_changelog="$(cat << EOF
-${changelog_header}
-
-${unreleased_header}
-EOF
-  )"
-
+initialize_all_commit_type_variables() {
   while read -d '|' commit_type; do
     local commit_type_header="$(generate_commit_type_header $commit_type)"
     local commit_type_content="$(generate_commit_type_content_for $commit_type)"
@@ -112,18 +86,21 @@ EOF
       continue
     fi
 
-    eval "local ${commit_type}_paragraph=\"\$(cat << EOF
+    eval "$(cat << EOF_eval
+${commit_type}_paragraph=\$(cat << EOF
 \${commit_type_header}
 
 \${commit_type_content}
 EOF
-)\""
-  done << EOF
+)
+EOF_eval
+    )"
+  done << EOF_while
 $(echo $generate_conventional_commit_type_regex)|
-EOF
+EOF_while
+}
 
-  echo "${top_of_changelog}"$'\n'
-
+output_all_commit_type_paragraphs() {
   while read -d '|' commit_type; do
     eval "local paragraph=\"\${${commit_type}_paragraph}\""
 
@@ -135,6 +112,14 @@ EOF
   done << EOF
 $(echo $generate_conventional_commit_type_regex)|
 EOF
+}
+
+output_changelog() {
+  initialize_all_commit_type_variables
+
+  echo "${generate_changelog_header}"$'\n'
+
+  output_all_commit_type_paragraphs
 }
 
 main() {

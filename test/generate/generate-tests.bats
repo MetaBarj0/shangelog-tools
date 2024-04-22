@@ -69,14 +69,7 @@ teardown() {
   commit_with_message 'chore(arbitrary scope): Third commit'
 
   local expected_output="$(cat << EOF
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+${generate_changelog_header}
 
 ### chore
 
@@ -99,14 +92,7 @@ EOF
   commit_with_message 'feat(last scope): Third commit'
 
   local expected_output="$(cat << EOF
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+${generate_changelog_header}
 
 ### feat
 
