@@ -20,3 +20,5 @@ docker run \
   -it \
   -v "${script_dir}/../":/root/ringover-shangelog-tools/:ro \
   shangelog-tools-tester
+
+docker image rm shangelog-tools-tester > /dev/null
