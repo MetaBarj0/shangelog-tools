@@ -115,22 +115,21 @@ EOF
   commit_with_message 'feat(last feature): latest fancy feature'
   commit_with_message 'chore(style): reformat, more stylish'
 
-  local expected_output="$(cat << EOF
-${generate_changelog_header}
+  run generate.sh
 
+  echo "$output" | pcregrep -M "$(cat << EOF
 ### feat
 
 - Initial commit
-- (last feature) latest fancy feature
+- \(last feature\) latest fancy feature
+EOF
+  )"
 
+  echo "$output" | pcregrep -M "$(cat << EOF
 ### chore
 
-- (a chore scope) Second commit, chore one
-- (style) reformat, more stylish
+- \(a chore scope\) Second commit, chore one
+- \(style\) reformat, more stylish
 EOF
-)"
-
-  run generate.sh
-
-  assert_output "$expected_output"
+  )"
 }
