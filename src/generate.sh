@@ -4,7 +4,7 @@ ensure_within_git_repository() {
   git status > /dev/null 2>&1
 
   if [ $? -ne 0 ]; then
-    echo 'Error: this script must be run within a git repository' >&2
+    echo "${generate_error_not_git_repository}" >&2
     exit 1
   fi
 }
@@ -12,7 +12,7 @@ ensure_within_git_repository() {
 ensure_there_are_commits() {
   local commit_count=$(git rev-list --all | wc -l)
   if [ $commit_count -lt 1 ]; then
-    echo 'Error: the git repository does not contain any commit' >&2
+    echo "${generate_error_no_commits}" >&2
     exit 1
   fi
 }
@@ -21,10 +21,7 @@ ensure_there_are_no_pending_changes() {
   local pending_changes="$(git status --porcelain=v1 -uno)"
 
   if [ ! -z "$pending_changes" ]; then
-    cat >&2 << EOF
-Error: there are pending changes in the repository. Commit, discard or stash
-them before going any further.
-EOF
+    echo "${generate_error_pending_changes}" >&2
 
     exit 1
   fi
@@ -33,14 +30,14 @@ EOF
 list_changelog_compliant_commits() {
   git rev-list \
     --all --reverse -E -i --grep \
-    '^(chore)(\(.+\))?!?: [^ ].*'
+    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*"
 }
 
 ensure_there_are_at_least_one_conventional_commit() {
   local changelog_compliant_commits="$(list_changelog_compliant_commits)"
 
   if [ -z "$changelog_compliant_commits" ]; then
-    echo 'Error: no suitable commit found to generate the change log'
+    echo "${generate_error_no_conventional_commit_found}" >&2
     exit 1
   fi
 }
@@ -62,48 +59,54 @@ generate_unreleased_header() {
 EOF
 }
 
-generate_chore_header() {
+generate_commit_type_header() {
   cat << EOF
 ### chore
 EOF
 }
 
-generate_chore_content() {
-  local chore_lines=
+generate_commit_type_content() {
+  local commit_lines=
   local commit_sha1=
 
   while read commit_sha1; do
     local commit_summary="$(git show -s --pretty='format:%s' $commit_sha1)"
-    local chore_line="$(echo $commit_summary | sed -E 's/^(chore)(\(.+\))?!?: ([^ ].*)/- \3/')"
-    chore_lines="$(cat << EOF
-${chore_lines}
-${chore_line}
+    local commit_line="$( \
+      echo $commit_summary \
+        | sed -E \
+        's/^('"${generate_conventional_commit_type_regex}"')(\(.+\))?: ([^ ].*)/- \3/')"
+
+    commit_lines="$(cat << EOF
+${commit_lines}
+${commit_line}
 EOF
     )"
   done << EOF
 $(list_changelog_compliant_commits)
 EOF
 
-  echo "$chore_lines"
+  echo "$commit_lines"
 }
 
 output_changelog() {
   local changelog_header="$(generate_changelog_header)"
   local unreleased_header="$(generate_unreleased_header)"
-  local chore_header="$(generate_chore_header)"
-  local chore_content="$(generate_chore_content)"
+  local commit_type_header="$(generate_commit_type_header)"
+  local commit_type_content="$(generate_commit_type_content)"
 
   cat << EOF
 ${changelog_header}
 
 ${unreleased_header}
 
-${chore_header}
-${chore_content}
+${commit_type_header}
+${commit_type_content}
 EOF
 }
 
 main() {
+  source ./generate.sh.d/strings.sh
+
   ensure_within_git_repository
   ensure_there_are_commits
   ensure_there_are_no_pending_changes
