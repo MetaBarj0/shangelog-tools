@@ -11,6 +11,7 @@ setup() {
   load '../test_helper/bats-assert/load'
 
   load 'helpers/git_repository_helpers.sh'
+  load 'helpers/ensure_match.sh'
 
   cp -r src /root
   cd /root/src
@@ -117,19 +118,13 @@ EOF
 
   run generate.sh
 
-  echo "$output" | pcregrep -M "$(cat << EOF
-### feat
+  ensure_match "$output" '### feat
 
 - Initial commit
-- \(last feature\) latest fancy feature
-EOF
-  )"
+- \(last feature\) latest fancy feature'
 
-  echo "$output" | pcregrep -M "$(cat << EOF
-### chore
+  ensure_match "$output" '### chore
 
 - \(a chore scope\) Second commit, chore one
-- \(style\) reformat, more stylish
-EOF
-  )"
+- \(style\) reformat, more stylish'
 }
