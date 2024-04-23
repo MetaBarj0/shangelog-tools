@@ -82,7 +82,6 @@ EOF
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
-  # TODO: fix ensure match to ensure 2 args are passed
   ensure_match "${output}" "${expected_output_pattern}"
 }
 
