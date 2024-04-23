@@ -122,19 +122,24 @@ output_changelog() {
   output_all_commit_type_paragraphs
 }
 
-main() {
-  # TODO: refacto in function
+load_strings() {
   local script_dirname="$(dirname "$0")"
   cd "$script_dirname" >/dev/null 2>&1
   local script_dir="$(pwd -P)"
   cd - >/dev/null 2>&1
 
   source "${script_dir}/generate.sh.d/strings.sh"
+}
 
+change_current_directory() {
   if [ ! -z "$1" ]; then
     cd "$1"
   fi
+}
 
+main() {
+  load_strings
+  change_current_directory "$1"
   ensure_within_git_repository
   ensure_there_are_commits
   ensure_there_are_no_pending_changes
