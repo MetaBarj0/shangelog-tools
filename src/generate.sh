@@ -40,6 +40,8 @@ ensure_there_are_at_least_one_conventional_commit() {
     echo "${generate_error_no_conventional_commit_found}" >&2
     exit 1
   fi
+
+  echo "${changelog_compliant_commits}"
 }
 
 generate_commit_type_header() {
@@ -50,6 +52,7 @@ EOF
 
 generate_commit_type_content_for() {
   local commit_type="$1"
+  local changelog_compliant_commits="$2"
   local commit_lines=
   local commit_sha1=
 
@@ -72,16 +75,18 @@ ${commit_line}
 EOF
     )"
   done << EOF
-$(list_changelog_compliant_commits)
+${changelog_compliant_commits}
 EOF
 
   echo "$commit_lines" | sed -E '/^$/d'
 }
 
 initialize_all_commit_type_variables() {
+  local changelog_compliant_commits="$1"
+
   while read -d '|' commit_type; do
     local commit_type_header="$(generate_commit_type_header $commit_type)"
-    local commit_type_content="$(generate_commit_type_content_for $commit_type)"
+    local commit_type_content="$(generate_commit_type_content_for $commit_type "${changelog_compliant_commits}")"
 
     if [ -z "${commit_type_content}" ]; then
       continue
@@ -116,7 +121,9 @@ EOF
 }
 
 output_changelog() {
-  initialize_all_commit_type_variables
+  local changelog_compliant_commits="$1"
+
+  initialize_all_commit_type_variables "${changelog_compliant_commits}"
 
   echo "${generate_changelog_header}"
 
@@ -139,14 +146,14 @@ change_current_directory() {
 }
 
 main() {
-  load_strings
-  change_current_directory "$1"
-  ensure_within_git_repository
-  ensure_there_are_commits
-  ensure_there_are_no_pending_changes
-  ensure_there_are_at_least_one_conventional_commit
-
-  output_changelog
+  load_strings \
+  && change_current_directory "$1" \
+  && ensure_within_git_repository \
+  && ensure_there_are_commits \
+  && ensure_there_are_no_pending_changes \
+  && local changelog_compliant_commits \
+  && changelog_compliant_commits="$(ensure_there_are_at_least_one_conventional_commit)" \
+  && output_changelog "${changelog_compliant_commits}"
 }
 
 main $@
