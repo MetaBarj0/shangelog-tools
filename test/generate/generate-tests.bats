@@ -12,6 +12,7 @@ setup() {
 
   load 'helpers/git_repository_helpers.sh'
   load 'helpers/ensure_match.sh'
+  load 'helpers/patterns.sh'
 
   cp -r src /root
   cd /root/src
@@ -69,20 +70,20 @@ teardown() {
   commit_with_message 'non conventional commit in the branch'
   commit_with_message 'chore(arbitrary scope): Third commit'
 
-  local expected_output="$(cat << EOF
-${generate_changelog_header}
+  local expected_output_pattern="$(cat << EOF
+^### chore$
 
-### chore
-
-- (arbitrary scope) Third commit
-- Second commit
-- Initial commit
+^- \(arbitrary scope\) Third commit ${generate_sha1_pattern}$
+^- Second commit ${generate_sha1_pattern}$
+^- Initial commit ${generate_sha1_pattern}$
 EOF
 )"
 
   run generate.sh
 
-  assert_output "$expected_output"
+  assert_output --partial "${generate_changelog_header}"
+  # TODO: fix ensure match to ensure 2 args are passed
+  ensure_match "${output}" "${expected_output_pattern}"
 }
 
 @test "generate succeeds to create several unreleased feat entries change log" {
@@ -92,20 +93,19 @@ EOF
   commit_with_message 'non conventional commit in the branch'
   commit_with_message 'feat(last scope): Third commit'
 
-  local expected_output="$(cat << EOF
-${generate_changelog_header}
+  local expected_output_pattern="$(cat << EOF
+^### feat$
 
-### feat
-
-- (last scope) Third commit
-- (a scope) Second commit
-- Initial commit
+^- \(last scope\) Third commit ${generate_sha1_pattern}$
+^- \(a scope\) Second commit ${generate_sha1_pattern}$
+^- Initial commit ${generate_sha1_pattern}$
 EOF
 )"
 
   run generate.sh
 
-  assert_output "$expected_output"
+  assert_output --partial "${generate_changelog_header}"
+  ensure_match "${output}" "${expected_output_pattern}"
 }
 
 @test "generates handles correctly interleaved conventional commit types" {
@@ -118,15 +118,15 @@ EOF
 
   run generate.sh
 
-  ensure_match "$output" '### feat
+  ensure_match "$output" "^### feat$
 
-- \(last feature\) latest fancy feature
-- Initial commit'
+^- \(last feature\) latest fancy feature ${generate_sha1_pattern}$
+^- Initial commit ${generate_sha1_pattern}$"
 
-  ensure_match "$output" '### chore
+  ensure_match "$output" "^### chore$
 
-- \(style\) reformat, more stylish
-- \(a chore scope\) Second commit, chore one'
+^- \(style\) reformat, more stylish ${generate_sha1_pattern}$
+^- \(a chore scope\) Second commit, chore one ${generate_sha1_pattern}$"
 }
 
 @test "generates support all conventional commit type, including Angular convention" {
@@ -185,4 +185,15 @@ EOF
   run generate.sh inner_git_dir
 
   assert_success
+}
+
+@test "generate must show the sha1 of each reported commit" {
+  create_git_repository
+  commit_with_message 'fix: a fix commit'
+
+  run generate.sh
+
+  ensure_match "$output" "### fix
+
+^- a fix commit ${generate_sha1_pattern}$"
 }

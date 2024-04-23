@@ -56,12 +56,13 @@ generate_commit_type_content_for() {
   while read commit_sha1; do
     local commit_summary="$(git show -s --pretty='format:%s' $commit_sha1)"
     local conventional_commit_header='^('"${commit_type}"')(\(.+\))?: ([^ ].*)'
+    local sha1="$(echo ${commit_sha1} | cut -c 0-8)"
     local commit_line="$( \
       echo $commit_summary \
         | grep -E \
         "${conventional_commit_header}" \
         | sed -E \
-        's/'"${conventional_commit_header}"'/- \2 \3/' \
+        's/'"${conventional_commit_header}"'/- \2 \3 ['"${sha1}"']/' \
         | sed -E 's/-  (.+)/- \1/'
     )"
 
