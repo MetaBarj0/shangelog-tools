@@ -1,5 +1,20 @@
 #!/bin/sh
 
+load_strings() {
+  local script_dirname="$(dirname "$0")"
+  cd "$script_dirname" >/dev/null 2>&1
+  local script_dir="$(pwd -P)"
+  cd - >/dev/null 2>&1
+
+  source "${script_dir}/generate.sh.d/strings.sh"
+}
+
+change_current_directory() {
+  if [ ! -z "$1" ]; then
+    cd "$1"
+  fi
+}
+
 ensure_current_directory_is_git_repository() {
   git status > /dev/null 2>&1
 }
@@ -143,21 +158,6 @@ output_changelog() {
   echo "${generate_changelog_header}"
 
   output_all_commit_type_paragraphs
-}
-
-load_strings() {
-  local script_dirname="$(dirname "$0")"
-  cd "$script_dirname" >/dev/null 2>&1
-  local script_dir="$(pwd -P)"
-  cd - >/dev/null 2>&1
-
-  source "${script_dir}/generate.sh.d/strings.sh"
-}
-
-change_current_directory() {
-  if [ ! -z "$1" ]; then
-    cd "$1"
-  fi
 }
 
 main() {
