@@ -189,16 +189,6 @@ $(echo $generate_conventional_commit_type_regex)|
 EOF
 }
 
-output_changelog() {
-  local changelog_compliant_commits="$1"
-
-  initialize_all_commit_type_variables "${changelog_compliant_commits}"
-
-  echo "${generate_changelog_header}"
-
-  output_all_commit_type_paragraphs
-}
-
 bump_version_if_asked() {
   if [ ! "$bump_version_asked" = 'true' ]; then
     return 0
@@ -216,6 +206,18 @@ bump_version_if_asked() {
   fi
 
   git tag -am 'placeholder' "$initial_version"
+}
+
+output_changelog() {
+  local changelog_compliant_commits="$1"
+
+  initialize_all_commit_type_variables "${changelog_compliant_commits}"
+
+  echo "${generate_changelog_header}"
+
+  echo $'\n## [Unreleased]'
+
+  output_all_commit_type_paragraphs
 }
 
 main() {

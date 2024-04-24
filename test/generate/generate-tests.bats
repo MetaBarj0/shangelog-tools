@@ -13,6 +13,7 @@ setup() {
   load 'helpers/git_repository_helpers.sh'
   load 'helpers/ensure_match.sh'
   load 'helpers/patterns.sh'
+  load 'helpers/tools.sh'
 
   mkdir -p /root/test
   cp -r src /root/test
@@ -71,7 +72,9 @@ teardown() {
   commit_with_message 'non conventional commit in the branch'
   commit_with_message 'chore(arbitrary scope): Third commit'
 
-  local expected_output_pattern="^### chore$
+  local expected_output_pattern="^## \[Unreleased\]$
+
+^### chore$
 
 ^- \(arbitrary scope\) Third commit ${generate_sha1_pattern}$
 ^- Second commit ${generate_sha1_pattern}$
@@ -305,20 +308,37 @@ teardown() {
   assert_output "${generate_error_bump_version_not_semver}"
 }
 
+@test "generate output a versioned changelog after a bump" {
+  skip "re-think the changelog generation in term of versionned sections"
+
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  local expected_output_pattern="## \[v0\.1\.0\]
+
+### feat
+
+- a very fancy feature ${generate_sha1_pattern}"
+
+  run generate.sh -b
+
+  assert_output --partial "$generate_changelog_header"
+  ensure_match "$output" "$expected_output_pattern"
+}
+
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
-  skip "Split this case, too complex"
+  skip "re-think the changelog generation in term of versionned sections"
 
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
   ./generate.sh -b > /dev/null
   commit_with_message 'fix: fixing the latest version'
-  local expected_output_pattern="## \[v0\.1\.0\]
+  local expected_output_pattern="## \[Unreleased\]
 
 ### fix
 
 - fixing the latest version ${generate_sha1_pattern}
 
-## \[Unreleased\]
+## \[v0\.1\.0\]
 
 ### feat
 

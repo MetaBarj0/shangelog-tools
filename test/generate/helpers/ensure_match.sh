@@ -9,5 +9,13 @@ ensure_match() {
   local value="$1"
   local pattern="$2"
 
-  echo "$value" | pcregrep -M "$pattern"
+  echo "$value" | pcregrep -M "$pattern" \
+    || (cat << EOF
+ensure_match failed
+ -> value:   ${value}
+===
+===
+ -> pattern: ${pattern}
+EOF
+        \ && return 1)
 }
