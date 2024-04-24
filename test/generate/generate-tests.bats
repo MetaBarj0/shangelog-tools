@@ -3,7 +3,7 @@
 setup_file() {
   bats_require_minimum_version 1.5.0
 
-  PATH=/root/src:${PATH}
+  PATH=/root/test/src:${PATH}
 }
 
 setup() {
@@ -14,14 +14,15 @@ setup() {
   load 'helpers/ensure_match.sh'
   load 'helpers/patterns.sh'
 
-  cp -r src /root
-  cd /root/src
+  mkdir -p /root/test
+  cp -r src /root/test
+  cd /root/test/src
 
   source ./generate.sh.d/strings.sh
 }
 
 teardown() {
-  rm -rf /root/src
+  rm -rf /root/test
 
   cd /root/ringover-shangelog-tools
 }
@@ -154,37 +155,37 @@ teardown() {
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
   cd /root
 
-  run -1 /root/src/generate.sh /
+  run -1 /root/test/src/generate.sh /
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
 
 @test "generate must succeed when invoked outside of a git repository, the current directory is not a git repository and the argument targets a git repository" {
-  create_git_repository_and_cd_in inner_git_dir
+  create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
   cd -
 
-  run generate.sh -r inner_git_dir
+  run generate.sh -r ../inner_git_dir
 
   assert_success
 }
 
 @test "generate must succeed when outside of a git repository, the current directory is a git repository, with no argument specified" {
-  create_git_repository_and_cd_in inner_git_dir
+  create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
 
-  run ../generate.sh
+  run ../src/generate.sh
 
   assert_success
 }
 
 @test "generate must succeed when outside of a git repository, the current directory being a git repository and an argument target a git repository. The argument takes precedence" {
-  create_git_repository_and_cd_in other_git_dir
+  create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the argument git repository'
-  create_git_repository_and_cd_in /root/yet_another_git_dir
+  create_git_repository_and_cd_in ../yet_another_git_dir
   commit_with_message 'test: the current directory git repository'
 
-  run /root/src/generate.sh -r /root/src/other_git_dir
+  run ../src/generate.sh -r ../other_git_dir
 
   ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
@@ -192,7 +193,7 @@ teardown() {
 @test "generate must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
   create_git_repository
   commit_with_message 'fix: a fix commit'
-  cd /root
+  cd ..
 
   run src/generate.sh
 
@@ -202,11 +203,11 @@ teardown() {
 @test "generate must succeed when within a git repository, the current directory is not a git repository and there is an argument targeting a git repository. The argument takes precedence" {
   create_git_repository
   commit_with_message 'test: the script location git repository'
-  create_git_repository_and_cd_in other_git_dir
+  create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the argument git repository'
-  cd /root
+  cd ..
 
-  run src/generate.sh -r src/other_git_dir
+  run src/generate.sh -r other_git_dir
 
   # TODO: report match failure better
   ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
@@ -215,7 +216,7 @@ teardown() {
 @test "generate must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
   create_git_repository
   commit_with_message 'test: the script location git repository'
-  create_git_repository_and_cd_in /root/other_git_dir
+  create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
 
   run ../src/generate.sh
@@ -226,12 +227,12 @@ teardown() {
 @test "generate must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
   create_git_repository
   commit_with_message 'test: the script location git repository'
-  create_git_repository_and_cd_in /root/other_git_dir
-  commit_with_message 'test: the current directory git repository'
-  create_git_repository_and_cd_in /root/yet_another_git_dir
+  create_git_repository_and_cd_in ../yet_another_git_dir
   commit_with_message 'test: the argument git repository'
+  create_git_repository_and_cd_in ../other_git_dir
+  commit_with_message 'test: the current directory git repository'
 
-  run ../src/generate.sh .
+  run ../src/generate.sh --git-repository ../yet_another_git_dir
 
   ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
@@ -247,7 +248,6 @@ teardown() {
 ^- a fix commit ${generate_sha1_pattern}$"
 }
 
-# TODO: better cleanup of created git repositories
 @test "generate can bump version creating an annotated tag if asked" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
