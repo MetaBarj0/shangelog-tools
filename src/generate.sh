@@ -1,5 +1,14 @@
 #!/bin/sh
 
+load_strings() {
+  local script_dirname="$(dirname "$0")"
+  cd "$script_dirname" >/dev/null 2>&1
+  local script_dir="$(pwd -P)"
+  cd - >/dev/null 2>&1
+
+  source "${script_dir}/generate.sh.d/strings.sh"
+}
+
 initialize_argument_default_values() {
   initial_version=v0.1.0
 }
@@ -37,15 +46,6 @@ parse_arguments() {
   done
 
   ensure_arguments_are_valid
-}
-
-load_strings() {
-  local script_dirname="$(dirname "$0")"
-  cd "$script_dirname" >/dev/null 2>&1
-  local script_dir="$(pwd -P)"
-  cd - >/dev/null 2>&1
-
-  source "${script_dir}/generate.sh.d/strings.sh"
 }
 
 change_current_directory() {
