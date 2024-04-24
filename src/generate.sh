@@ -1,7 +1,13 @@
 #!/bin/sh
 
+initialize_argument_default_values() {
+  initial_version=v0.1.0
+}
+
 parse_arguments() {
-  local valid_args="$(getopt -o br: --long bump-version,git-repository: -- $@)"
+  initialize_argument_default_values
+
+  local valid_args="$(getopt -o br:i: --long bump-version,git-repository:,initial-version: -- $@)"
 
   eval set -- "$valid_args"
 
@@ -13,6 +19,10 @@ parse_arguments() {
         ;;
       -r | --git-repository)
         git_repository_directory="$2"
+        shift 2
+        ;;
+      -i | --initial-version)
+        initial_version="$2"
         shift 2
         ;;
       --)
@@ -185,7 +195,7 @@ output_changelog() {
 
 bump_version_if_asked() {
   if [ "$bump_version_asked" = 'true' ]; then
-    git tag -am 'placeholder' v0.1.0
+    git tag -am 'placeholder' "$initial_version"
   fi
 }
 

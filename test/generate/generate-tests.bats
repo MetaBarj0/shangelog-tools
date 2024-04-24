@@ -263,5 +263,14 @@ teardown() {
 
   run generate.sh
 
-  refute [ "$(git describe --abbrev=0)" = 'v0.1.0' ]
+  refute assert_latest_annotated_tag_equals 'v0.1.0'
+}
+
+@test "generate can bump version creating an initial annotated tag specified by the user" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+
+  run generate.sh --bump-version --initial-version=v5.0.0
+
+  assert_latest_annotated_tag_equals 'v5.0.0'
 }
