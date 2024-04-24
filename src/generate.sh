@@ -4,6 +4,10 @@ initialize_argument_default_values() {
   initial_version=v0.1.0
 }
 
+ensure_arguments_are_valid() {
+  echo "$initial_version" | pcregrep "${generate_semver_regex}" > /dev/null
+}
+
 parse_arguments() {
   initialize_argument_default_values
 
@@ -31,6 +35,8 @@ parse_arguments() {
         ;;
     esac
   done
+
+  ensure_arguments_are_valid
 }
 
 load_strings() {
@@ -194,22 +200,35 @@ output_changelog() {
 }
 
 bump_version_if_asked() {
-  if [ "$bump_version_asked" = 'true' ]; then
-    git tag -am 'placeholder' "$initial_version"
+  if [ ! "$bump_version_asked" = 'true' ]; then
+    return 0
   fi
+
+  local describe_output="$(git describe --abbrev=0)"
+
+  if [ "$describe_output" = "$initial_version" ]; then
+    return 0
+  fi
+
+  if [ ! -z "$describe_output" ] && [ ! "$describe_output" = "$initial_version" ]; then
+    echo "$generate_error_bump_version_already_done" >&2
+    return 1
+  fi
+
+  git tag -am 'placeholder' "$initial_version"
 }
 
 main() {
-  parse_arguments "$@" \
-  && load_strings \
+  load_strings \
+  && parse_arguments "$@" \
   && change_current_directory "$git_repository_directory" \
   && ensure_targeting_git_repository \
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \
   && local changelog_compliant_commits \
   && changelog_compliant_commits="$(ensure_there_are_at_least_one_conventional_commit)" \
-  && output_changelog "${changelog_compliant_commits}" \
-  && bump_version_if_asked
+  && bump_version_if_asked \
+  && output_changelog "${changelog_compliant_commits}"
 }
 
 main $@

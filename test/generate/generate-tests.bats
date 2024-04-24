@@ -274,3 +274,33 @@ teardown() {
 
   assert_latest_annotated_tag_equals 'v5.0.0'
 }
+
+@test "bumping the same initial version on an already version-bumped repository has no effect" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  ./generate.sh --bump-version
+
+  run generate.sh --bump-version
+
+  assert_success
+  assert_latest_annotated_tag_equals 'v0.1.0'
+}
+
+@test "bumping version several time with different initial version is meaningless and errors" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  ./generate.sh --bump-version
+
+  run -1 generate.sh --bump-version --initial-version=v1.0.0
+
+  assert_output "${generate_error_bump_version_already_done}"
+}
+
+@test "bumping with a non SemVer compliant version string is an error" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+
+  run -1 generate.sh --bump-version --initial-version=wip_non_semver
+
+  assert_output "${generate_error_bump_version_not_semver}"
+}
