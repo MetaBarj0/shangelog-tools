@@ -304,3 +304,28 @@ teardown() {
 
   assert_output "${generate_error_bump_version_not_semver}"
 }
+
+@test "generate output a changelog with both a versionned and an unreleased section after version bump" {
+  skip "Split this case, too complex"
+
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  ./generate.sh -b > /dev/null
+  commit_with_message 'fix: fixing the latest version'
+  local expected_output_pattern="## \[v0\.1\.0\]
+
+### fix
+
+- fixing the latest version ${generate_sha1_pattern}
+
+## \[Unreleased\]
+
+### feat
+
+- a very fancy feature ${generate_sha1_pattern}"
+
+  run generate.sh -b
+
+  assert_output --partial "$generate_changelog_header"
+  ensure_match "$output" "$expected_output_pattern"
+}

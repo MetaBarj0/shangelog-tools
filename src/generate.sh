@@ -204,7 +204,7 @@ bump_version_if_asked() {
     return 0
   fi
 
-  local describe_output="$(git describe --abbrev=0)"
+  local describe_output="$(git describe --abbrev=0 2>/dev/null)"
 
   if [ "$describe_output" = "$initial_version" ]; then
     return 0
