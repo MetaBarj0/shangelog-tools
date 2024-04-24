@@ -164,7 +164,7 @@ teardown() {
   commit_with_message 'chore: a first commit'
   cd -
 
-  run generate.sh inner_git_dir
+  run generate.sh -r inner_git_dir
 
   assert_success
 }
@@ -184,7 +184,7 @@ teardown() {
   create_git_repository_and_cd_in /root/yet_another_git_dir
   commit_with_message 'test: the current directory git repository'
 
-  run /root/src/generate.sh /root/src/other_git_dir
+  run /root/src/generate.sh -r /root/src/other_git_dir
 
   ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
@@ -206,7 +206,7 @@ teardown() {
   commit_with_message 'test: the argument git repository'
   cd /root
 
-  run src/generate.sh src/other_git_dir
+  run src/generate.sh -r src/other_git_dir
 
   # TODO: report match failure better
   ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
@@ -245,4 +245,23 @@ teardown() {
   ensure_match "$output" "### fix
 
 ^- a fix commit ${generate_sha1_pattern}$"
+}
+
+# TODO: better cleanup of created git repositories
+@test "generate can bump version creating an annotated tag if asked" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+
+  run generate.sh --bump-version
+
+  assert_latest_annotated_tag_equals 'v0.1.0'
+}
+
+@test "generate does not bump version creating an annotated tag if not asked" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+
+  run generate.sh
+
+  refute [ "$(git describe --abbrev=0)" = 'v0.1.0' ]
 }

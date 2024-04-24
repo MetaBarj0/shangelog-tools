@@ -1,5 +1,28 @@
 #!/bin/sh
 
+parse_arguments() {
+  local valid_args="$(getopt -o br: --long bump-version,git-repository: -- $@)"
+
+  eval set -- "$valid_args"
+
+  while true; do
+    case "$1" in
+      -b | --bump-version)
+        bump_version_asked=true
+        shift
+        ;;
+      -r | --git-repository)
+        git_repository_directory="$2"
+        shift 2
+        ;;
+      --)
+        shift
+        break
+        ;;
+    esac
+  done
+}
+
 load_strings() {
   local script_dirname="$(dirname "$0")"
   cd "$script_dirname" >/dev/null 2>&1
@@ -160,15 +183,23 @@ output_changelog() {
   output_all_commit_type_paragraphs
 }
 
+bump_version_if_asked() {
+  if [ "$bump_version_asked" = 'true' ]; then
+    git tag -am 'placeholder' v0.1.0
+  fi
+}
+
 main() {
-  load_strings \
-  && change_current_directory "$1" \
+  parse_arguments "$@" \
+  && load_strings \
+  && change_current_directory "$git_repository_directory" \
   && ensure_targeting_git_repository \
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \
   && local changelog_compliant_commits \
   && changelog_compliant_commits="$(ensure_there_are_at_least_one_conventional_commit)" \
-  && output_changelog "${changelog_compliant_commits}"
+  && output_changelog "${changelog_compliant_commits}" \
+  && bump_version_if_asked
 }
 
 main $@
