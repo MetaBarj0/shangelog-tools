@@ -15,3 +15,9 @@ commit_with_message() {
   git add messages > /dev/null 2>&1
   git commit -m "$message" > /dev/null 2>&1
 }
+
+create_git_repository_and_cd_in() {
+  mkdir -p "$1"
+  cd "$1"
+  create_git_repository
+}

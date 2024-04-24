@@ -1,7 +1,21 @@
 #!/bin/sh
 
-ensure_within_git_repository() {
+ensure_current_directory_is_git_repository() {
   git status > /dev/null 2>&1
+}
+
+ensure_script_is_within_git_repository() {
+  if [ $? -ne 0 ]; then
+    local script_dirname="$(dirname "$0")"
+    cd "$script_dirname" >/dev/null 2>&1
+  fi
+
+  ensure_current_directory_is_git_repository
+}
+
+ensure_targeting_git_repository() {
+  ensure_current_directory_is_git_repository \
+  || ensure_script_is_within_git_repository
 
   if [ $? -ne 0 ]; then
     echo "${generate_error_cannot_bind_git_repository}" >&2
@@ -62,11 +76,12 @@ generate_commit_type_content_for() {
     local sha1="$(echo ${commit_sha1} | cut -c 0-8)"
     local commit_line="$( \
       echo $commit_summary \
-        | grep -E \
+      | grep -E \
         "${conventional_commit_header}" \
-        | sed -E \
+      | sed -E \
         's/'"${conventional_commit_header}"'/- \2 \3 ['"${sha1}"']/' \
-        | sed -E 's/-  (.+)/- \1/'
+      | sed -E \
+        's/-  (.+)/- \1/'
     )"
 
     commit_lines="$(cat << EOF
@@ -148,7 +163,7 @@ change_current_directory() {
 main() {
   load_strings \
   && change_current_directory "$1" \
-  && ensure_within_git_repository \
+  && ensure_targeting_git_repository \
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \
   && local changelog_compliant_commits \

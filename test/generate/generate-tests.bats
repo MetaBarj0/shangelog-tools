@@ -26,13 +26,13 @@ teardown() {
   cd /root/ringover-shangelog-tools
 }
 
-@test "generate fails with '1' if not run within a git repository" {
+@test "generate fails with '1' if not targeting git repository" {
   run -1 generate.sh
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
 
-@test "generate fails in a git repository without any commit" {
+@test "generate fails if the git repository does not have any commit" {
   create_git_repository
 
   run -1 generate.sh
@@ -40,7 +40,7 @@ teardown() {
   assert_output "${generate_error_no_commits}"
 }
 
-@test "generate fails if there is pending changes in the repository" {
+@test "generate fails if there is pending changes in the targeted repository" {
   create_git_repository
   commit_with_message 'chore: First conventional chore commit'
   touch pending.txt
@@ -70,14 +70,11 @@ teardown() {
   commit_with_message 'non conventional commit in the branch'
   commit_with_message 'chore(arbitrary scope): Third commit'
 
-  local expected_output_pattern="$(cat << EOF
-^### chore$
+  local expected_output_pattern="^### chore$
 
 ^- \(arbitrary scope\) Third commit ${generate_sha1_pattern}$
 ^- Second commit ${generate_sha1_pattern}$
-^- Initial commit ${generate_sha1_pattern}$
-EOF
-)"
+^- Initial commit ${generate_sha1_pattern}$"
 
   run generate.sh
 
@@ -92,14 +89,11 @@ EOF
   commit_with_message 'non conventional commit in the branch'
   commit_with_message 'feat(last scope): Third commit'
 
-  local expected_output_pattern="$(cat << EOF
-^### feat$
+  local expected_output_pattern="^### feat$
 
 ^- \(last scope\) Third commit ${generate_sha1_pattern}$
 ^- \(a scope\) Second commit ${generate_sha1_pattern}$
-^- Initial commit ${generate_sha1_pattern}$
-EOF
-)"
+^- Initial commit ${generate_sha1_pattern}$"
 
   run generate.sh
 
@@ -117,6 +111,7 @@ EOF
 
   run generate.sh
 
+  assert_output --partial "${generate_changelog_header}"
   ensure_match "$output" "^### feat$
 
 ^- \(last feature\) latest fancy feature ${generate_sha1_pattern}$
@@ -143,6 +138,7 @@ EOF
 
   run generate.sh
 
+  assert_output --partial "${generate_changelog_header}"
   ensure_match "$output" $'### test\n\n- a test commit'
   ensure_match "$output" $'### perf\n\n- a perf commit'
   ensure_match "$output" $'### refactor\n\n- a refactor commit'
@@ -155,18 +151,26 @@ EOF
   ensure_match "$output" $'### fix\n\n- a fix commit'
 }
 
-@test "generate must fail if invoked outside of a git repository and the current directory is not a git repository" {
+@test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
   cd /root
 
-  run -1 ringover-shangelog-tools/src/generate.sh
+  run -1 /root/src/generate.sh /
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
 
-@test "generate must succeed when invoked outside a git repository and the current directory is a git repository" {
-  mkdir -p inner_git_dir
-  cd inner_git_dir
-  create_git_repository
+@test "generate must succeed when invoked outside of a git repository, the current directory is not a git repository and the argument targets a git repository" {
+  create_git_repository_and_cd_in inner_git_dir
+  commit_with_message 'chore: a first commit'
+  cd -
+
+  run generate.sh inner_git_dir
+
+  assert_success
+}
+
+@test "generate must succeed when outside of a git repository, the current directory is a git repository, with no argument specified" {
+  create_git_repository_and_cd_in inner_git_dir
   commit_with_message 'chore: a first commit'
 
   run ../generate.sh
@@ -174,16 +178,62 @@ EOF
   assert_success
 }
 
-@test "generate must succeed when invoked outside a git repository, the current directory is not a git repository and the script argument is a git repository" {
-  mkdir -p inner_git_dir
-  cd inner_git_dir
-  create_git_repository
-  commit_with_message 'chore: a first commit'
-  cd -
+@test "generate must succeed when outside of a git repository, the current directory being a git repository and an argument target a git repository. The argument takes precedence" {
+  create_git_repository_and_cd_in other_git_dir
+  commit_with_message 'test: the argument git repository'
+  create_git_repository_and_cd_in /root/yet_another_git_dir
+  commit_with_message 'test: the current directory git repository'
 
-  run generate.sh inner_git_dir
+  run /root/src/generate.sh /root/src/other_git_dir
+
+  ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+}
+
+@test "generate must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
+  create_git_repository
+  commit_with_message 'fix: a fix commit'
+  cd /root
+
+  run src/generate.sh
 
   assert_success
+}
+
+@test "generate must succeed when within a git repository, the current directory is not a git repository and there is an argument targeting a git repository. The argument takes precedence" {
+  create_git_repository
+  commit_with_message 'test: the script location git repository'
+  create_git_repository_and_cd_in other_git_dir
+  commit_with_message 'test: the argument git repository'
+  cd /root
+
+  run src/generate.sh src/other_git_dir
+
+  # TODO: report match failure better
+  ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+}
+
+@test "generate must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
+  create_git_repository
+  commit_with_message 'test: the script location git repository'
+  create_git_repository_and_cd_in /root/other_git_dir
+  commit_with_message 'test: the current directory git repository'
+
+  run ../src/generate.sh
+
+  ensure_match "$output" $'# test\n\n^- the current directory git repository '"${generate_sha1_pattern}"'$'
+}
+
+@test "generate must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
+  create_git_repository
+  commit_with_message 'test: the script location git repository'
+  create_git_repository_and_cd_in /root/other_git_dir
+  commit_with_message 'test: the current directory git repository'
+  create_git_repository_and_cd_in /root/yet_another_git_dir
+  commit_with_message 'test: the argument git repository'
+
+  run ../src/generate.sh .
+
+  ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
 
 @test "generate must show the sha1 of each reported commit" {
