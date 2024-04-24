@@ -50,10 +50,32 @@ Besides, alert on tag found that are not annotated.
 - Ensure latest annotated tag exists:
   - `git describe --abbrev=0` does not return an error but the latest annotated
     tag
-- List all commits from that annotated tag, excluding it, in reverse order:
-  `git rev-list --reverse HEAD ^$(git describe --abbrev=0)`
+- List all commits from the HEAD reachable from that annotated tag, excluding
+  it:
+  `git rev-list HEAD ^$(git describe --abbrev=0)`
 - filter all commits that are conventional ones
 - Alert if there are non conventional commits
+- List commits reachable from a tag, excluding it:
+  `git rev-list <a tag>~1`
+  - useful to work with the very first annotated tag
+- List commits between 2 annotated tags, excluding specified tags:
+  `git rev-list <newer tag>~1 ^<older tag>`
+  - ok if the newest tag is not a merge commit otherwise:
+    `git rev-list <newer tag>^2 ^<older tag>`
+  - check if a commit or a tag is a merge:
+    `git rev-parse <the tag>^2`
+    - operation success: merge commit
+    - operation failure: normal commit
+
+#### Get all annotated tags
+
+``` sh
+for tag in $(git tag); do
+  if [ "$(git cat-file -t $tag)" = "tag" ]; then
+    echo $tag
+  fi
+done
+```
 
 ### Extract summary info from conventional commit
 
