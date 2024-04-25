@@ -143,11 +143,13 @@ teardown() {
   commit_with_message 'refactor: a refactor commit'
   commit_with_message 'perf: a perf commit'
   commit_with_message 'test: a test commit'
+  commit_with_message 'revert: a revert commit'
 
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
   assert_output --partial "## [Unreleased]"
+  ensure_match "$output" $'### revert\n\n- a revert commit'
   ensure_match "$output" $'### test\n\n- a test commit'
   ensure_match "$output" $'### perf\n\n- a perf commit'
   ensure_match "$output" $'### refactor\n\n- a refactor commit'

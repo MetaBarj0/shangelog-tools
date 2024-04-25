@@ -20,7 +20,7 @@ generate_error_bump_version_already_done=\
 'Error: version bump already done'
 
 generate_conventional_commit_type_regex=\
-'fix|feat|build|chore|ci|docs|style|refactor|perf|test'
+'fix|feat|build|chore|ci|docs|style|refactor|perf|test|revert'
 
 generate_semver_regex=\
 '^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
