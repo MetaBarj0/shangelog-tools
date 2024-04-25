@@ -1,5 +1,12 @@
 #!/bin/sh
 
+load_strings() {
+  local script_dir="$1"
+
+  source "${script_dir}/generate.sh.d/strings.sh"
+  echo "source ${script_dir}/generate.sh.d/strings.sh" >&3
+}
+
 initialize_argument_default_values() {
   initial_version=v0.1.0
 }
@@ -102,4 +109,17 @@ output_all_commit_type_paragraphs() {
   done << EOF
 $(echo $generate_conventional_commit_type_regex)|
 EOF
+}
+
+generate_versioned_sections() {
+  # TODO: delete this once algorithm is done
+  [ ! -z "$1" ] && load_strings "$1"
+  
+  local commits="$(list_changelog_compliant_commits)"
+
+  initialize_all_commit_type_variables "${commits}"
+
+  echo $'\n## [Unreleased]'
+
+  output_all_commit_type_paragraphs
 }

@@ -8,11 +8,10 @@ get_script_dir() {
 }
 
 load_functions() {
-  source "$(get_script_dir)/generate.sh.d/functions.sh"
-}
+  local script_dir="$(get_script_dir)"
 
-load_strings() {
-  source "$(get_script_dir)/generate.sh.d/strings.sh"
+  source "${script_dir}/generate.sh.d/functions.sh"
+  load_strings "${script_dir}"
 }
 
 parse_arguments() {
@@ -124,7 +123,6 @@ output_changelog() {
 
 main() {
   load_functions \
-  && load_strings \
   && parse_arguments "$@" \
   && change_current_directory "$git_repository_directory" \
   && ensure_targeting_git_repository \
