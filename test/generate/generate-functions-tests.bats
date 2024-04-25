@@ -11,7 +11,7 @@ setup() {
   load '../test_helper/bats-assert/load'
 
   load 'helpers/git_repository_helpers.sh'
-  load 'helpers/ensure_match.sh'
+  load 'helpers/assert_extra.sh'
   load 'helpers/patterns.sh'
   load 'helpers/tools.sh'
 
@@ -20,6 +20,7 @@ setup() {
   cd /root/test/src
 
   source generate.sh.d/functions.sh
+  source generate.sh.d/strings.sh
 }
 
 teardown() {
@@ -39,16 +40,7 @@ teardown() {
   local unreleased_line_count=3 # \n## [Unreleased]\n\n
 
   run generate_versioned_sections "$(pwd)"
-  local output_line_count=0
-  while read out; do
-    output_line_count=$(bc << EOF_bc
-$output_line_count + 1
-EOF_bc
-    )
-  done << EOF
-  $output
-EOF
 
   assert_output --partial "## [Unreleased]"
-  assert [ $output_line_count -eq $(( $unreleased_line_count + $type_line_count + $conventional_commit_count )) ]
+  assert_line_count_equals "$output" $(( $unreleased_line_count + $type_line_count + $conventional_commit_count ))
 }

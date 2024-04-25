@@ -11,7 +11,7 @@ setup() {
   load '../test_helper/bats-assert/load'
 
   load 'helpers/git_repository_helpers.sh'
-  load 'helpers/ensure_match.sh'
+  load 'helpers/assert_extra.sh'
   load 'helpers/patterns.sh'
   load 'helpers/tools.sh'
 
@@ -83,7 +83,7 @@ teardown() {
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
-  ensure_match "${output}" "${expected_output_pattern}"
+  assert_pcre_match "${output}" "${expected_output_pattern}"
 }
 
 @test "generate succeeds to create several unreleased feat entries change log" {
@@ -104,7 +104,7 @@ teardown() {
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
-  ensure_match "${output}" "${expected_output_pattern}"
+  assert_pcre_match "${output}" "${expected_output_pattern}"
 }
 
 @test "generates handles correctly interleaved conventional commit types" {
@@ -118,14 +118,14 @@ teardown() {
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
-  ensure_match "$output" "^## \[Unreleased\]$
+  assert_pcre_match "$output" "^## \[Unreleased\]$
 
 ^### feat$
 
 ^- \(last feature\) latest fancy feature ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
 
-  ensure_match "$output" "^### chore$
+  assert_pcre_match "$output" "^### chore$
 
 ^- \(style\) reformat, more stylish ${generate_sha1_pattern}$
 ^- \(a chore scope\) Second commit, chore one ${generate_sha1_pattern}$"
@@ -149,17 +149,17 @@ teardown() {
 
   assert_output --partial "${generate_changelog_header}"
   assert_output --partial "## [Unreleased]"
-  ensure_match "$output" $'### revert\n\n- a revert commit'
-  ensure_match "$output" $'### test\n\n- a test commit'
-  ensure_match "$output" $'### perf\n\n- a perf commit'
-  ensure_match "$output" $'### refactor\n\n- a refactor commit'
-  ensure_match "$output" $'### style\n\n- a style commit'
-  ensure_match "$output" $'### docs\n\n- a docs commit'
-  ensure_match "$output" $'### ci\n\n- a ci commit'
-  ensure_match "$output" $'### chore\n\n- a chore commit'
-  ensure_match "$output" $'### build\n\n- a build commit'
-  ensure_match "$output" $'### feat\n\n- a feat commit'
-  ensure_match "$output" $'### fix\n\n- a fix commit'
+  assert_pcre_match "$output" $'### revert\n\n- a revert commit'
+  assert_pcre_match "$output" $'### test\n\n- a test commit'
+  assert_pcre_match "$output" $'### perf\n\n- a perf commit'
+  assert_pcre_match "$output" $'### refactor\n\n- a refactor commit'
+  assert_pcre_match "$output" $'### style\n\n- a style commit'
+  assert_pcre_match "$output" $'### docs\n\n- a docs commit'
+  assert_pcre_match "$output" $'### ci\n\n- a ci commit'
+  assert_pcre_match "$output" $'### chore\n\n- a chore commit'
+  assert_pcre_match "$output" $'### build\n\n- a build commit'
+  assert_pcre_match "$output" $'### feat\n\n- a feat commit'
+  assert_pcre_match "$output" $'### fix\n\n- a fix commit'
 }
 
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
@@ -197,7 +197,7 @@ teardown() {
 
   run ../src/generate.sh -r ../other_git_dir
 
-  ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
 
 @test "generate must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
@@ -219,7 +219,7 @@ teardown() {
 
   run src/generate.sh -r other_git_dir
 
-  ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
 
 @test "generate must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
@@ -230,7 +230,7 @@ teardown() {
 
   run ../src/generate.sh
 
-  ensure_match "$output" $'# test\n\n^- the current directory git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'# test\n\n^- the current directory git repository '"${generate_sha1_pattern}"'$'
 }
 
 @test "generate must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
@@ -243,7 +243,7 @@ teardown() {
 
   run ../src/generate.sh --git-repository ../yet_another_git_dir
 
-  ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
 
 @test "generate must show the sha1 of each reported commit" {
@@ -252,7 +252,7 @@ teardown() {
 
   run generate.sh
 
-  ensure_match "$output" "### fix
+  assert_pcre_match "$output" "### fix
 
 ^- a fix commit ${generate_sha1_pattern}$"
 }
@@ -328,7 +328,7 @@ teardown() {
   run generate.sh -b
 
   assert_output --partial "$generate_changelog_header"
-  ensure_match "$output" "$expected_output_pattern"
+  assert_pcre_match "$output" "$expected_output_pattern"
 }
 
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
@@ -353,5 +353,5 @@ teardown() {
   run generate.sh -b
 
   assert_output --partial "$generate_changelog_header"
-  ensure_match "$output" "$expected_output_pattern"
+  assert_pcre_match "$output" "$expected_output_pattern"
 }
