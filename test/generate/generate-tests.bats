@@ -93,7 +93,9 @@ teardown() {
   commit_with_message 'non conventional commit in the branch'
   commit_with_message 'feat(last scope): Third commit'
 
-  local expected_output_pattern="^### feat$
+  local expected_output_pattern="^## \[Unreleased\]$
+
+^### feat$
 
 ^- \(last scope\) Third commit ${generate_sha1_pattern}$
 ^- \(a scope\) Second commit ${generate_sha1_pattern}$
@@ -116,7 +118,9 @@ teardown() {
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
-  ensure_match "$output" "^### feat$
+  ensure_match "$output" "^## \[Unreleased\]$
+
+^### feat$
 
 ^- \(last feature\) latest fancy feature ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
@@ -143,6 +147,7 @@ teardown() {
   run generate.sh
 
   assert_output --partial "${generate_changelog_header}"
+  assert_output --partial "## [Unreleased]"
   ensure_match "$output" $'### test\n\n- a test commit'
   ensure_match "$output" $'### perf\n\n- a perf commit'
   ensure_match "$output" $'### refactor\n\n- a refactor commit'
@@ -212,7 +217,6 @@ teardown() {
 
   run src/generate.sh -r other_git_dir
 
-  # TODO: report match failure better
   ensure_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
 }
 
