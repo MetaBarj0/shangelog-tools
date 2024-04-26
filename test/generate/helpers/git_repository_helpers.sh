@@ -22,8 +22,8 @@ create_git_repository_and_cd_in() {
   create_git_repository
 }
 
-assert_latest_annotated_tag_equals() {
-  local expected="$1"
+create_annotated_tag() {
+  local version="$1"
 
-  [ "$(git describe --abbrev=0)" = "$expected" ]
+  git tag -am "annotated tag: $version" "$version"
 }

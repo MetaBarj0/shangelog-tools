@@ -37,5 +37,11 @@ assert_line_count_equals failed
 ===
  -> expected: ${expected}
 EOF
-     \ && return 1)
+        \ && return 1)
+}
+
+assert_latest_annotated_tag_equals() {
+  local expected="$1"
+
+  [ "$(git describe --abbrev=0)" = "$expected" ]
 }

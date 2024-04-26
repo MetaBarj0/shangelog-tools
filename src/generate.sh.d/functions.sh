@@ -110,12 +110,17 @@ $(echo $generate_conventional_commit_type_regex)|
 EOF
 }
 
+output_section_header() {
+  local latest_tag="$(git describe --abbrev=0 2>/dev/null || echo Unreleased)"
+
+  echo $'\n## ['"${latest_tag}"']'
+}
+
 generate_versioned_sections() {
   local commits="$(list_changelog_compliant_commits)"
 
   initialize_all_commit_type_variables "${commits}"
 
-  echo $'\n## [Unreleased]'
-
+  output_section_header
   output_all_commit_type_paragraphs
 }

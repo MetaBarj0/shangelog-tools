@@ -37,10 +37,26 @@ teardown() {
   commit_with_message 'a non conventional commit'
   local conventional_commit_count=3
   local type_line_count=2 # ### commit type\n\n
-  local unreleased_line_count=3 # \n## [Unreleased]\n\n
 
   run generate_versioned_sections "$(pwd)"
 
   assert_output --partial "## [Unreleased]"
-  assert_line_count_equals "$output" $(( $unreleased_line_count + $type_line_count + $conventional_commit_count ))
+}
+
+@test "A repository with an unique annotated tag generate an unique versioned changelog section with all conventional commits within" {
+  create_git_repository
+  commit_with_message 'chore: a great reformat'
+  commit_with_message 'chore: another style changing'
+  commit_with_message 'chore: removing unuseful comment'
+  commit_with_message 'a non conventional commit'
+  commit_with_message 'chore: a random chore'
+  create_annotated_tag v0.1.0
+  local conventional_commit_count=4
+  local type_line_count=2 # ### commit type\n\n
+  local section_line_count=3 # \n## [v0.1.0]\n\n
+
+  run generate_versioned_sections "$(pwd)"
+
+  assert_output --partial "## [v0.1.0]"
+  assert_line_count_equals "$output" $(( ${section_line_count} + ${type_line_count} + ${conventional_commit_count} ))
 }
