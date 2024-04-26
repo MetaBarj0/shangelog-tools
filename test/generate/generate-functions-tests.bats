@@ -38,7 +38,7 @@ teardown() {
   local conventional_commit_count=3
   local type_line_count=2 # ### commit type\n\n
 
-  run generate_versioned_sections "$(pwd)"
+  run generate_sections
 
   assert_output --partial "## [Unreleased]"
 }
@@ -55,8 +55,25 @@ teardown() {
   local type_line_count=2 # ### commit type\n\n
   local section_line_count=3 # \n## [v0.1.0]\n\n
 
-  run generate_versioned_sections "$(pwd)"
+  run generate_sections
 
   assert_output --partial "## [v0.1.0]"
   assert_line_count_equals "$output" $(( ${section_line_count} + ${type_line_count} + ${conventional_commit_count} ))
+}
+
+@test "A repository with an annotated tag and commits above it generate 2 sections with one being Unreleased, the other being versioned" {
+  create_git_repository
+  commit_with_message 'chore: a great reformat'
+  commit_with_message 'chore: another style changing'
+  create_annotated_tag v0.1.0
+  commit_with_message 'chore: removing unuseful comment'
+  commit_with_message 'a non conventional commit'
+  commit_with_message 'chore: a random chore'
+
+  run generate_sections
+
+  assert_output --partial "## [Unreleased]"
+  assert_output --partial "## [v0.1.0]"
+  assert_pcre_match "$output" "${expected_unreleased_pattern}"
+  assert_pcre_match "$output" "${expected_v0_1_0_pattern}"
 }

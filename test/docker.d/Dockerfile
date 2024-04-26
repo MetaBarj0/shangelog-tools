@@ -20,4 +20,4 @@ WORKDIR /root/ringover-shangelog-tools
 
 FROM prepare_volume as setup_entrypoint
 COPY scripts /root
-ENTRYPOINT /root/entrypoint.sh
+ENTRYPOINT ["/root/entrypoint.sh"]

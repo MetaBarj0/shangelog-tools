@@ -22,7 +22,7 @@ docker run \
   --rm \
   -it \
   -v "${script_dir}/../":/root/ringover-shangelog-tools/:ro \
-  shangelog-tools-tester
+  shangelog-tools-tester "$@"
 
 echo 'Cleaning up the mess...'
 docker image rm shangelog-tools-tester > /dev/null

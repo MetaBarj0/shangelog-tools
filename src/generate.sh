@@ -80,14 +80,10 @@ ensure_there_are_no_pending_changes() {
 }
 
 ensure_there_are_at_least_one_conventional_commit() {
-  local changelog_compliant_commits="$(list_changelog_compliant_commits)"
-
-  if [ -z "$changelog_compliant_commits" ]; then
+  if ! is_there_any_conventional_commit; then
     echo "${generate_error_no_conventional_commit_found}" >&2
     exit 1
   fi
-
-  echo "${changelog_compliant_commits}"
 }
 
 bump_version_if_asked() {
@@ -110,15 +106,12 @@ bump_version_if_asked() {
 }
 
 output_changelog() {
-  local changelog_compliant_commits="$1"
+  local header="${generate_changelog_header}"
+  local sections \
+  && sections="$(generate_sections)" || exit $?
 
-  initialize_all_commit_type_variables "${changelog_compliant_commits}"
-
-  echo "${generate_changelog_header}"
-
-  echo $'\n## [Unreleased]'
-
-  output_all_commit_type_paragraphs
+  echo "$header"
+  echo "$sections"
 }
 
 main() {
@@ -128,10 +121,9 @@ main() {
   && ensure_targeting_git_repository \
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \
-  && local changelog_compliant_commits \
-  && changelog_compliant_commits="$(ensure_there_are_at_least_one_conventional_commit)" \
+  && ensure_there_are_at_least_one_conventional_commit \
   && bump_version_if_asked \
-  && output_changelog "${changelog_compliant_commits}"
+  && output_changelog
 }
 
 main $@

@@ -27,12 +27,6 @@ ensure_script_is_within_git_repository() {
   ensure_current_directory_is_git_repository
 }
 
-list_changelog_compliant_commits() {
-  git rev-list \
-    --all -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*"
-}
-
 generate_commit_type_header() {
   cat << EOF
 ### $1
@@ -71,6 +65,52 @@ EOF
   echo "$commit_lines" | sed -E '/^$/d'
 }
 
+get_latest_tag() {
+  git describe --abbrev=0 2>/dev/null
+}
+
+list_changelog_compliant_commits_up_to() {
+  local end_rev="$1"
+  local end_rev_option="$([ ! -z $end_rev ] && echo ${end_rev} || echo '--all')"
+
+  git rev-list \
+    -E -i --grep \
+    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+    "${end_rev_option}"
+}
+
+# TODO: refacto conventional commit header pattern
+is_there_any_conventional_commit() {
+  [ $(git rev-list \
+        --count -E -i --grep \
+        "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+        "$(git branch --show-current)") -gt 0 ]
+}
+
+list_changelog_compliant_commits_from_rev_to_tip() {
+  local rev="$1"
+
+  local rev_option \
+  && [ ! -z "$rev" ] \
+  && rev_option="^${rev}" \
+  || rev_option="$(git branch --show-current)"
+
+  git rev-list \
+    -E -i --grep \
+    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+    HEAD "${rev_option}"
+}
+
+list_changelog_compliant_commits_from_and_up_to() {
+  local begin_rev="$1"
+  local end_rev="$2"
+
+  git rev-list \
+    -E -i --grep \
+    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+    "${begin_rev}" "${end_rev}~1"
+}
+
 initialize_all_commit_type_variables() {
   local changelog_compliant_commits="$1"
 
@@ -96,6 +136,12 @@ $(echo $generate_conventional_commit_type_regex)|
 EOF_while
 }
 
+output_section_header() {
+  local header_name="$1"
+
+  echo $'\n## ['"$1"']'
+}
+
 output_all_commit_type_paragraphs() {
   while read -d '|' commit_type; do
     eval "local paragraph=\"\${${commit_type}_paragraph}\""
@@ -110,17 +156,40 @@ $(echo $generate_conventional_commit_type_regex)|
 EOF
 }
 
-output_section_header() {
-  local latest_tag="$(git describe --abbrev=0 2>/dev/null || echo Unreleased)"
+generate_unreleased_section() {
+  local latest_tag="$(get_latest_tag)"
 
-  echo $'\n## ['"${latest_tag}"']'
-}
+  local commits="$(list_changelog_compliant_commits_from_rev_to_tip ${latest_tag})"
 
-generate_versioned_sections() {
-  local commits="$(list_changelog_compliant_commits)"
+  if [ -z "$commits" ]; then
+    return 0
+  fi
 
   initialize_all_commit_type_variables "${commits}"
 
-  output_section_header
+  output_section_header 'Unreleased'
   output_all_commit_type_paragraphs
+}
+
+generate_versioned_sections() {
+  local latest_tag="$(get_latest_tag)"
+
+  [ -z "$latest_tag" ] && return 0
+
+  local commits="$(list_changelog_compliant_commits_up_to ${latest_tag})"
+
+  if [ -z "$commits" ]; then
+    return 0
+  fi
+
+  initialize_all_commit_type_variables "${commits}"
+
+  output_section_header "${latest_tag}"
+  output_all_commit_type_paragraphs
+}
+
+generate_sections() {
+  generate_unreleased_section \
+  && generate_versioned_sections \
+  || exit $?
 }

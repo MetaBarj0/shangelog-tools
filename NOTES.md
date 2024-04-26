@@ -50,13 +50,13 @@ Besides, alert on tag found that are not annotated.
 - Ensure latest annotated tag exists:
   - `git describe --abbrev=0` does not return an error but the latest annotated
     tag
-- List all commits from the HEAD reachable from that annotated tag, excluding
+- List all commits reachable from the HEAD up to that annotated tag, excluding
   it:
   `git rev-list HEAD ^$(git describe --abbrev=0)`
 - filter all commits that are conventional ones
 - Alert if there are non conventional commits
-- List commits reachable from a tag, excluding it:
-  `git rev-list <a tag>~1`
+- List commits reachable from a tag:
+  `git rev-list <a tag>`
   - useful to work with the very first annotated tag
 - List commits between 2 annotated tags, excluding specified tags:
   `git rev-list <newer tag>~1 ^<older tag>`
