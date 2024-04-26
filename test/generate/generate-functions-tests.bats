@@ -61,6 +61,7 @@ teardown() {
   assert_line_count_equals "$output" $(( ${section_line_count} + ${type_line_count} + ${conventional_commit_count} ))
 }
 
+# TODO: ensure pattern are matched in order
 @test "A repository with an annotated tag and commits above it generate 2 sections with one being Unreleased, the other being versioned" {
   create_git_repository
   commit_with_message 'chore: a great reformat'
@@ -69,11 +70,61 @@ teardown() {
   commit_with_message 'chore: removing unuseful comment'
   commit_with_message 'a non conventional commit'
   commit_with_message 'chore: a random chore'
+  local expected_unreleased_pattern="^## \[Unreleased\]$
+
+^### chore$
+
+^- a random chore ${generate_sha1_pattern}$
+^- removing unuseful comment ${generate_sha1_pattern}$"
+  local expected_v0_1_0_pattern="^## \[v0\.1\.0\]$
+
+^### chore$
+
+^- another style changing ${generate_sha1_pattern}$
+^- a great reformat ${generate_sha1_pattern}$"
 
   run generate_sections
 
-  assert_output --partial "## [Unreleased]"
-  assert_output --partial "## [v0.1.0]"
   assert_pcre_match "$output" "${expected_unreleased_pattern}"
+  assert_pcre_match "$output" "${expected_v0_1_0_pattern}"
+}
+
+@test "A repository with multiple annotated tags output as much as versioned sections" {
+  create_git_repository
+  commit_with_message 'feat: a great first feature'
+  create_annotated_tag v0.1.0
+  commit_with_message 'chore: removing unuseful comment'
+  create_annotated_tag v0.1.1
+  commit_with_message 'a non conventional commit'
+  commit_with_message 'refactor: red, green, ...'
+  create_annotated_tag v0.1.2
+  commit_with_message 'fix: what a mess'
+  create_annotated_tag v0.1.3
+  local expected_v0_1_3_pattern="^## \[v0\.1\.3\]$
+
+^### fix
+
+^- what a mess ${generate_sha1_pattern}$"
+  local expected_v0_1_2_pattern="^## \[v0\.1\.2\]$
+
+^### refactor$
+
+^- red, green, ... ${generate_sha1_pattern}$"
+  local expected_v0_1_1_pattern="^## \[v0\.1\.1\]$
+
+^### chore$
+
+^- removing unuseful comment ${generate_sha1_pattern}$"
+  local expected_v0_1_0_pattern="^## \[v0\.1\.0\]$
+
+^### feat$
+
+^- a great first feature ${generate_sha1_pattern}$"
+
+  run generate_sections
+
+  assert_pcre_match "$output" "${expected_v0_1_3_pattern}"
+  assert_pcre_match "$output" "${expected_v0_1_2_pattern}"
+  assert_pcre_match "$output" "${expected_v0_1_1_pattern}"
   assert_pcre_match "$output" "${expected_v0_1_0_pattern}"
 }

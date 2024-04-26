@@ -317,6 +317,7 @@ teardown() {
 @test "generate output a versioned changelog after a bump" {
   skip "re-think the changelog generation in term of versionned sections"
 
+  # TODO: fix multiline pcre match with begin and end of line
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
   local expected_output_pattern="## \[v0\.1\.0\]

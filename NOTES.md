@@ -69,12 +69,14 @@ Besides, alert on tag found that are not annotated.
 
 #### Get all annotated tags
 
+From most recent to eldest:
+
 ``` sh
 for tag in $(git tag); do
   if [ "$(git cat-file -t $tag)" = "tag" ]; then
     echo $tag
   fi
-done
+done | tac
 ```
 
 ### Extract summary info from conventional commit

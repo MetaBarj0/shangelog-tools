@@ -69,14 +69,13 @@ get_latest_tag() {
   git describe --abbrev=0 2>/dev/null
 }
 
-list_changelog_compliant_commits_up_to() {
+list_changelog_compliant_commits_reachable_from() {
   local end_rev="$1"
-  local end_rev_option="$([ ! -z $end_rev ] && echo ${end_rev} || echo '--all')"
 
   git rev-list \
     -E -i --grep \
     "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
-    "${end_rev_option}"
+    "${end_rev}"
 }
 
 # TODO: refacto conventional commit header pattern
@@ -108,7 +107,7 @@ list_changelog_compliant_commits_from_and_up_to() {
   git rev-list \
     -E -i --grep \
     "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
-    "${begin_rev}" "${end_rev}~1"
+    "${begin_rev}" ^"${end_rev}"
 }
 
 initialize_all_commit_type_variables() {
@@ -171,25 +170,47 @@ generate_unreleased_section() {
   output_all_commit_type_paragraphs
 }
 
-generate_versioned_sections() {
-  local latest_tag="$(get_latest_tag)"
+get_all_semver_tags() {
+  for tag in $(git tag); do
+    if [ "$(git cat-file -t $tag)" = "tag" ]; then
+      echo $tag
+    fi
+  done \
+  | pcregrep "${generate_semver_regex}" \
+  | tac
+}
 
-  [ -z "$latest_tag" ] && return 0
+generate_versioned_section() {
+  local upper_tag="$(echo "$1" | head -n 1)"
+  local lower_tag="$2"
 
-  local commits="$(list_changelog_compliant_commits_up_to ${latest_tag})"
-
-  if [ -z "$commits" ]; then
-    return 0
+  local commits
+  if [ -z "$lower_tag" ]; then
+    commits="$(list_changelog_compliant_commits_reachable_from $upper_tag)"
+  else
+    commits="$(list_changelog_compliant_commits_from_and_up_to $upper_tag $lower_tag)"
   fi
 
   initialize_all_commit_type_variables "${commits}"
 
-  output_section_header "${latest_tag}"
+  output_section_header "${upper_tag}"
   output_all_commit_type_paragraphs
+
+  local next_tags="$(echo "$1" | sed '1d')"
+  local next_lower_tag="$(echo "$next_tags" | sed '1d' | head -n 1)"
+
+  [ ! -z "$lower_tag" ] \
+  && generate_versioned_section "$next_tags" "$next_lower_tag"
+}
+
+generate_versioned_sections() {
+  local tags="$(get_all_semver_tags)"
+  local lower_tag="$(echo "$tags" | sed '1d' | head -n 1)"
+
+  generate_versioned_section "$tags" "$lower_tag"
 }
 
 generate_sections() {
   generate_unreleased_section \
-  && generate_versioned_sections \
-  || exit $?
+  && generate_versioned_sections
 }

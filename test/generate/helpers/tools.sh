@@ -18,3 +18,7 @@ EOF
 
   echo $output_line_count
 }
+
+print_test() {
+  echo "<<<$@>>>" >&3
+}
