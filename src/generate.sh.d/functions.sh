@@ -74,15 +74,14 @@ list_changelog_compliant_commits_reachable_from() {
 
   git rev-list \
     -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+    "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
     "${end_rev}"
 }
 
-# TODO: refacto conventional commit header pattern
 is_there_any_conventional_commit() {
   [ $(git rev-list \
         --count -E -i --grep \
-        "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+        "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
         "$(git branch --show-current)") -gt 0 ]
 }
 
@@ -96,7 +95,7 @@ list_changelog_compliant_commits_from_rev_to_tip() {
 
   git rev-list \
     -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+    "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
     HEAD "${rev_option}"
 }
 
@@ -106,7 +105,7 @@ list_changelog_compliant_commits_from_and_up_to() {
 
   git rev-list \
     -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})(\(.+\))?: [^ ].*" \
+    "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
     "${begin_rev}" ^"${end_rev}"
 }
 

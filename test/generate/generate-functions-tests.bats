@@ -61,7 +61,6 @@ teardown() {
   assert_line_count_equals "$output" $(( ${section_line_count} + ${type_line_count} + ${conventional_commit_count} ))
 }
 
-# TODO: ensure pattern are matched in order
 @test "A repository with an annotated tag and commits above it generate 2 sections with one being Unreleased, the other being versioned" {
   create_git_repository
   commit_with_message 'chore: a great reformat'
@@ -70,13 +69,14 @@ teardown() {
   commit_with_message 'chore: removing unuseful comment'
   commit_with_message 'a non conventional commit'
   commit_with_message 'chore: a random chore'
-  local expected_unreleased_pattern="^## \[Unreleased\]$
+  local expected_pattern="^## \[Unreleased\]$
 
 ^### chore$
 
 ^- a random chore ${generate_sha1_pattern}$
-^- removing unuseful comment ${generate_sha1_pattern}$"
-  local expected_v0_1_0_pattern="^## \[v0\.1\.0\]$
+^- removing unuseful comment ${generate_sha1_pattern}$
+
+^## \[v0\.1\.0\]$
 
 ^### chore$
 
@@ -85,8 +85,7 @@ teardown() {
 
   run generate_sections
 
-  assert_pcre_match "$output" "${expected_unreleased_pattern}"
-  assert_pcre_match "$output" "${expected_v0_1_0_pattern}"
+  assert_pcre_match "$output" "${expected_pattern}"
 }
 
 @test "A repository with multiple annotated tags output as much as versioned sections" {
