@@ -315,8 +315,6 @@ teardown() {
 }
 
 @test "generate output a versioned changelog after a bump" {
-  skip "re-think the changelog generation in term of versionned sections"
-
   # TODO: fix multiline pcre match with begin and end of line
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
@@ -333,8 +331,6 @@ teardown() {
 }
 
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
-  skip "re-think the changelog generation in term of versionned sections"
-
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
   ./generate.sh -b > /dev/null

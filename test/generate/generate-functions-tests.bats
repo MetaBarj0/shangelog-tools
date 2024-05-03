@@ -30,7 +30,6 @@ teardown() {
 }
 
 @test "A repository without annotated tag generate an unique unreleased changelog section with all conventional commits within" {
-  skip
   create_git_repository
   commit_with_message 'feat: a great feature'
   commit_with_message 'feat: an extension of the great feature'
@@ -45,7 +44,6 @@ teardown() {
 }
 
 @test "A repository with an unique annotated tag generate an unique versioned changelog section with all conventional commits within" {
-  skip
   create_git_repository
   commit_with_message 'chore: a great reformat'
   commit_with_message 'chore: another style changing'
@@ -65,7 +63,6 @@ teardown() {
 
 # TODO: ensure pattern are matched in order
 @test "A repository with an annotated tag and commits above it generate 2 sections with one being Unreleased, the other being versioned" {
-  skip
   create_git_repository
   commit_with_message 'chore: a great reformat'
   commit_with_message 'chore: another style changing'
