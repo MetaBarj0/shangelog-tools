@@ -114,6 +114,12 @@ initialize_all_commit_type_variables() {
   local changelog_compliant_commits="$1"
 
   while read -d '|' commit_type; do
+    eval "unset ${commit_type}_paragraph"
+  done << EOF_while
+$(echo $generate_conventional_commit_type_regex)|
+EOF_while
+
+  while read -d '|' commit_type; do
     local commit_type_header="$(generate_commit_type_header $commit_type)"
     local commit_type_content="$(generate_commit_type_content_for $commit_type "${changelog_compliant_commits}")"
 
@@ -201,10 +207,15 @@ generate_versioned_section() {
 
   [ ! -z "$lower_tag" ] \
   && generate_versioned_section "$next_tags" "$next_lower_tag"
+
+  return 0
 }
 
 generate_versioned_sections() {
   local tags="$(get_all_semver_tags)"
+
+  [ -z "$tags" ] && return 0
+
   local lower_tag="$(echo "$tags" | sed '1d' | head -n 1)"
 
   generate_versioned_section "$tags" "$lower_tag"

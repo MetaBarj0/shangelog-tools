@@ -108,7 +108,7 @@ bump_version_if_asked() {
 output_changelog() {
   local header="${generate_changelog_header}"
   local sections \
-  && sections="$(generate_sections)" || exit $?
+  && sections="$(generate_sections)" || return $?
 
   echo "$header"
   echo "$sections"
