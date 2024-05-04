@@ -149,17 +149,17 @@ teardown() {
 
   assert_output --partial "${generate_changelog_header}"
   assert_output --partial "## [Unreleased]"
-  assert_pcre_match "$output" $'### revert\n\n- a revert commit'
-  assert_pcre_match "$output" $'### test\n\n- a test commit'
-  assert_pcre_match "$output" $'### perf\n\n- a perf commit'
-  assert_pcre_match "$output" $'### refactor\n\n- a refactor commit'
-  assert_pcre_match "$output" $'### style\n\n- a style commit'
-  assert_pcre_match "$output" $'### docs\n\n- a docs commit'
-  assert_pcre_match "$output" $'### ci\n\n- a ci commit'
-  assert_pcre_match "$output" $'### chore\n\n- a chore commit'
-  assert_pcre_match "$output" $'### build\n\n- a build commit'
-  assert_pcre_match "$output" $'### feat\n\n- a feat commit'
-  assert_pcre_match "$output" $'### fix\n\n- a fix commit'
+  assert_pcre_match "$output" $'^### revert$\n\n'"^- a revert commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### test$\n\n'"^- a test commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### perf$\n\n'"^- a perf commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### refactor$\n\n'"^- a refactor commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### style$\n\n'"^- a style commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### docs$\n\n'"^- a docs commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### ci$\n\n'"^- a ci commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### chore$\n\n'"^- a chore commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### build$\n\n'"^- a build commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### feat$\n\n'"^- a feat commit ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" $'^### fix$\n\n'"^- a fix commit ${generate_sha1_pattern}$"
 }
 
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
@@ -197,7 +197,7 @@ teardown() {
 
   run ../src/generate.sh -r ../other_git_dir
 
-  assert_pcre_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
@@ -219,7 +219,7 @@ teardown() {
 
   run src/generate.sh -r other_git_dir
 
-  assert_pcre_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
@@ -230,7 +230,7 @@ teardown() {
 
   run ../src/generate.sh
 
-  assert_pcre_match "$output" $'# test\n\n^- the current directory git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
@@ -243,7 +243,7 @@ teardown() {
 
   run ../src/generate.sh --git-repository ../yet_another_git_dir
 
-  assert_pcre_match "$output" $'# test\n\n^- the argument git repository '"${generate_sha1_pattern}"'$'
+  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must show the sha1 of each reported commit" {
@@ -252,7 +252,7 @@ teardown() {
 
   run generate.sh
 
-  assert_pcre_match "$output" "### fix
+  assert_pcre_match "$output" "^### fix$
 
 ^- a fix commit ${generate_sha1_pattern}$"
 }
@@ -315,14 +315,13 @@ teardown() {
 }
 
 @test "generate output a versioned changelog after a bump" {
-  # TODO: fix multiline pcre match with begin and end of line
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
-  local expected_output_pattern="## \[v0\.1\.0\]
+  local expected_output_pattern="^## \[v0\.1\.0\]$
 
-### feat
+^### feat$
 
-- a very fancy feature ${generate_sha1_pattern}"
+^- a very fancy feature ${generate_sha1_pattern}$"
 
   run generate.sh -b
 
@@ -335,17 +334,17 @@ teardown() {
   commit_with_message 'feat: a very fancy feature'
   ./generate.sh -b > /dev/null
   commit_with_message 'fix: fixing the latest version'
-  local expected_output_pattern="## \[Unreleased\]
+  local expected_output_pattern="^## \[Unreleased\]$
 
-### fix
+^### fix$
 
-- fixing the latest version ${generate_sha1_pattern}
+^- fixing the latest version ${generate_sha1_pattern}$
 
-## \[v0\.1\.0\]
+^## \[v0\.1\.0\]$
 
-### feat
+^### feat$
 
-- a very fancy feature ${generate_sha1_pattern}"
+^- a very fancy feature ${generate_sha1_pattern}$"
 
   run generate.sh -b
 
