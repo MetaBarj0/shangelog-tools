@@ -41,7 +41,7 @@ generate_commit_type_content_for() {
 
   while read commit_sha1; do
     local commit_summary="$(git show -s --pretty='format:%s' $commit_sha1)"
-    local conventional_commit_header='^('"${commit_type}"')(\(.+\))?: ([^ ].*)'
+    local conventional_commit_header="^(${commit_type})${generate_conventional_commit_scope_title_regex}"
     local sha1="$(echo ${commit_sha1} | cut -c 0-8)"
     local commit_line="$( \
       echo $commit_summary \
@@ -99,6 +99,7 @@ list_changelog_compliant_commits_from_rev_to_tip() {
     HEAD "${rev_option}"
 }
 
+# TODO: add tests for tagged commit being a merge. ff and no ff
 list_changelog_compliant_commits_from_and_up_to() {
   local begin_rev="$1"
   local end_rev="$2"
@@ -109,6 +110,7 @@ list_changelog_compliant_commits_from_and_up_to() {
     "${begin_rev}" ^"${end_rev}"
 }
 
+# TODO: ugly way of doing things. Try to find another implementation
 initialize_all_commit_type_variables() {
   local changelog_compliant_commits="$1"
 
@@ -143,16 +145,14 @@ EOF_while
 output_section_header() {
   local header_name="$1"
 
-  echo $'\n## ['"$1"']'
+  echo $'\n'"## [$1]"
 }
 
 output_all_commit_type_paragraphs() {
   while read -d '|' commit_type; do
     eval "local paragraph=\"\${${commit_type}_paragraph}\""
 
-    if [ -z "${paragraph}" ]; then
-      continue
-    fi
+    [ -z "${paragraph}" ] && continue
 
     echo $'\n'"${paragraph}"
   done << EOF
@@ -160,29 +160,23 @@ $(echo $generate_conventional_commit_type_regex)|
 EOF
 }
 
+output_section() {
+  local header="$1"
+  local commits="$2"
+
+  output_section_header "$header"
+  initialize_all_commit_type_variables "${commits}"
+  output_all_commit_type_paragraphs
+}
+
 generate_unreleased_section() {
   local latest_tag="$(get_latest_tag)"
 
   local commits="$(list_changelog_compliant_commits_from_rev_to_tip ${latest_tag})"
 
-  if [ -z "$commits" ]; then
-    return 0
-  fi
+  [ -z "$commits" ] && return 0
 
-  initialize_all_commit_type_variables "${commits}"
-
-  output_section_header 'Unreleased'
-  output_all_commit_type_paragraphs
-}
-
-get_all_semver_tags() {
-  for tag in $(git tag); do
-    if [ "$(git cat-file -t $tag)" = "tag" ]; then
-      echo $tag
-    fi
-  done \
-  | pcregrep "${generate_semver_regex}" \
-  | tac
+  output_section 'Unreleased' "${commits}"
 }
 
 generate_versioned_section() {
@@ -196,10 +190,7 @@ generate_versioned_section() {
     commits="$(list_changelog_compliant_commits_from_and_up_to $upper_tag $lower_tag)"
   fi
 
-  initialize_all_commit_type_variables "${commits}"
-
-  output_section_header "${upper_tag}"
-  output_all_commit_type_paragraphs
+  output_section "${upper_tag}" "${commits}"
 
   local next_tags="$(echo "$1" | sed '1d')"
   local next_lower_tag="$(echo "$next_tags" | sed '1d' | head -n 1)"
@@ -208,6 +199,16 @@ generate_versioned_section() {
   && generate_versioned_section "$next_tags" "$next_lower_tag"
 
   return 0
+}
+
+get_all_semver_tags() {
+  for tag in $(git tag); do
+    if [ "$(git cat-file -t $tag)" = "tag" ]; then
+      echo $tag
+    fi
+  done \
+  | pcregrep "${generate_semver_regex}" \
+  | tac
 }
 
 generate_versioned_sections() {

@@ -14,6 +14,7 @@ load_functions() {
   load_strings "${script_dir}"
 }
 
+# TODO: help option, usage description
 parse_arguments() {
   initialize_argument_default_values
 
