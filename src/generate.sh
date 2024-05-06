@@ -14,11 +14,15 @@ load_functions() {
   load_strings "${script_dir}"
 }
 
-# TODO: help option, usage description
 parse_arguments() {
   initialize_argument_default_values
 
-  local valid_args="$(getopt -o br:i: --long bump-version,git-repository:,initial-version: -- $@)"
+  local valid_args \
+  && valid_args="$(getopt -q -o br:i:h --long bump-version,git-repository:,initial-version:,help -- $@)"
+
+  if [ $? -ne 0 ]; then
+    show_help
+  fi
 
   eval set -- "$valid_args"
 
@@ -36,7 +40,17 @@ parse_arguments() {
         initial_version="$2"
         shift 2
         ;;
+      -h | --help)
+        show_help
+        shift
+        break
+        ;;
       --)
+        shift
+        break
+        ;;
+      \?)
+        show_help
         shift
         break
         ;;

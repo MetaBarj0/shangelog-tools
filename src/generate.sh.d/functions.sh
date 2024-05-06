@@ -225,3 +225,51 @@ generate_sections() {
   generate_unreleased_section \
   && generate_versioned_sections
 }
+
+show_help() {
+  cat << EOF
+usage: generate.sh [-h | --help] [-b | --bump-version]
+                   [-i | --initial-version] [-r | --git-repository]
+
+Output the changelog of a chosen git repository.
+
+Options:
+
+  -h  --help
+
+      Display this message.
+
+  -b  --bump-version
+
+      Create an annotated tag at the tip of the current branch. The tag will
+      be named according the SemVer convention and be calculated
+      automatically depending the conventional commit type found from either
+      the latest annotated SemVer compliant tag or the root of the git
+      repository.
+
+  -i version | --initial-version=version
+
+      The initial version to set when using -b or --bump-version on a git
+      repository that does not have any SemVer annotated tag yet.
+
+  -r directory | --git-repository=directory
+
+      The git repository to target. Useful when the generate.sh script is not
+      within a git repository or the current directory is not the git directory
+      you want to generate a changelog from.
+
+Examples:
+
+  Given you're in the generate.sh directory:
+
+    ./generate.sh will print the changelog on the standard output.
+
+    ./generate.sh -b will print the changelog on the standard output and bump
+    the currently unreleased changes on the respository. Bumping the version
+    means creating an annotated tag at the tip of the current branch. If this
+    is the first time you bump the version and you do not specify the
+    --initial-version option, v0.1.0 will be used by default.
+EOF
+
+  exit 0
+}
