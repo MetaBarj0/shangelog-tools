@@ -110,15 +110,14 @@ list_changelog_compliant_commits_from_and_up_to() {
     "${begin_rev}" ^"${end_rev}"
 }
 
-# TODO: ugly way of doing things. Try to find another implementation
-initialize_all_commit_type_variables() {
-  local changelog_compliant_commits="$1"
+output_section_header() {
+  local header_name="$1"
 
-  while read -d '|' commit_type; do
-    eval "unset ${commit_type}_paragraph"
-  done << EOF_while
-$(echo $generate_conventional_commit_type_regex)|
-EOF_while
+  echo $'\n'"## [$1]"
+}
+
+output_all_commit_type_paragraphs() {
+  local changelog_compliant_commits="$1"
 
   while read -d '|' commit_type; do
     local commit_type_header="$(generate_commit_type_header $commit_type)"
@@ -129,7 +128,7 @@ EOF_while
     fi
 
     eval "$(cat << EOF_eval
-${commit_type}_paragraph=\$(cat << EOF
+local ${commit_type}_paragraph=\$(cat << EOF
 \${commit_type_header}
 
 \${commit_type_content}
@@ -140,15 +139,7 @@ EOF_eval
   done << EOF_while
 $(echo $generate_conventional_commit_type_regex)|
 EOF_while
-}
 
-output_section_header() {
-  local header_name="$1"
-
-  echo $'\n'"## [$1]"
-}
-
-output_all_commit_type_paragraphs() {
   while read -d '|' commit_type; do
     eval "local paragraph=\"\${${commit_type}_paragraph}\""
 
@@ -165,8 +156,7 @@ output_section() {
   local commits="$2"
 
   output_section_header "$header"
-  initialize_all_commit_type_variables "${commits}"
-  output_all_commit_type_paragraphs
+  output_all_commit_type_paragraphs "${commits}"
 }
 
 generate_unreleased_section() {
