@@ -101,10 +101,6 @@ ensure_there_are_at_least_one_conventional_commit() {
   fi
 }
 
-is_feat_section_generated() {
-  echo "$(generate_unreleased_section)" | pcregrep -M '^### feat$' > /dev/null
-}
-
 bump_version_if_asked() {
   if [ ! "$bump_version_asked" = 'true' ]; then
     return 0

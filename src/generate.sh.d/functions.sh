@@ -39,6 +39,12 @@ generate_commit_type_header() {
 EOF
 }
 
+show_commit_summary() {
+  local commit_sha1="$1"
+
+  git show -s --pretty='format:%s' $commit_sha1
+}
+
 generate_commit_type_content_for() {
   local commit_type="$1"
   local changelog_compliant_commits="$2"
@@ -46,7 +52,7 @@ generate_commit_type_content_for() {
   local commit_sha1=
 
   while read commit_sha1; do
-    local commit_summary="$(git show -s --pretty='format:%s' $commit_sha1)"
+    local commit_summary="$(show_commit_summary $commit_sha1)"
     local conventional_commit_header="^(${commit_type})${generate_conventional_commit_scope_title_regex}"
     local sha1="$(echo ${commit_sha1} | cut -c 0-8)"
     local commit_line="$( \
@@ -164,10 +170,14 @@ output_section() {
   output_all_commit_type_paragraphs "${commits}"
 }
 
-generate_unreleased_section() {
+list_unreleased_changelog_compliant_commits() {
   local latest_tag="$(get_latest_tag)"
 
-  local commits="$(list_changelog_compliant_commits_from_rev_to_tip ${latest_tag})"
+  list_changelog_compliant_commits_from_rev_to_tip ${latest_tag}
+}
+
+generate_unreleased_section() {
+  local commits="$(list_unreleased_changelog_compliant_commits)"
 
   [ -z "$commits" ] && return 0
 
@@ -196,12 +206,12 @@ generate_versioned_section() {
   return 0
 }
 
+get_all_sorted_annotated_tags() {
+  git for-each-ref --format='%(objecttype) %(refname:short)' --sort='v:refname' | grep tag | sed 's/^tag //'
+}
+
 get_all_semver_tags_from_newest_to_oldest() {
-  for tag in $(git tag); do
-    if [ "$(git cat-file -t $tag)" = "tag" ]; then
-      echo $tag
-    fi
-  done \
+  get_all_sorted_annotated_tags \
   | pcregrep "${generate_semver_regex}" \
   | tac
 }
@@ -277,10 +287,73 @@ bump_initial_version() {
   git tag -am 'initial version' "$initial_version"
 }
 
-bump_next_major() {
-  local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
+show_commit_body() {
+  local commit_sha1="$1"
+
+  git show -s --pretty='format:%b' $commit_sha1
+}
+
+is_it_breaking_commit_summary() {
+  local commit_summary="$1"
+  local breaking_commit_summary_pattern="(${generate_conventional_commit_type_regex})${generate_conventional_breaking_commit_scope_title_regex}"
+
+  echo "$commit_summary" | grep -E "${breaking_commit_summary_pattern}" >/dev/null 
+}
+
+extract_footer() {
+  local body="$(echo "$1" | tac)"
+  local footer
+
+  while read line; do
+    if [ -z "$line" ]; then
+      break
+    fi
+
+    footer="$footer"$'\n'"$line"
+  done << EOF
+$body
+EOF
+
+  echo "$footer" | sed -E '1d'
+}
+
+is_it_breaking_commit_body() {
+  local commit_body="$1"
+  local footer="$(extract_footer "$commit_body")"
+  local breaking_commit_footer_pattern="^BREAKING( |-)CHANGE: .+$"
+
+  echo "$footer" | grep -E "${breaking_commit_footer_pattern}" >/dev/null 
+}
+
+is_there_breaking_changes() {
+  while read commit_sha1; do
+    local commit_summary="$(show_commit_summary $commit_sha1)"
+    local commit_body="$(show_commit_body $commit_sha1)"
+
+    is_it_breaking_commit_summary "$commit_summary" \
+    && return 0 \
+    || is_it_breaking_commit_body "$commit_body" \
+    && return 0
+  done << EOF
+$(list_unreleased_changelog_compliant_commits)
+EOF
 
   return 1
+}
+
+bump_next_major() {
+  if ! is_there_breaking_changes; then
+    return 1
+  fi
+
+  local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
+  local new_major_number="$(inc $major_number)"
+
+  git tag -am 'next version' "v${new_major_number}.0.0"
+}
+
+is_feat_section_generated() {
+  echo "$(generate_unreleased_section)" | pcregrep -M '^### feat$' > /dev/null
 }
 
 bump_next_minor() {
@@ -290,11 +363,9 @@ bump_next_minor() {
 
   local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
   local minor_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\2/')"
-  local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
-
   local new_minor_number="$(inc $minor_number)"
 
-  git tag -am 'next version' "v${major_number}.${new_minor_number}.${patch_number}"
+  git tag -am 'next version' "v${major_number}.${new_minor_number}.0"
 }
 
 bump_next_patch() {
@@ -304,7 +375,6 @@ bump_next_patch() {
 
   local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
   local version_without_patch="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1.\2/')"
-
   local new_patch_number="$(inc $patch_number)"
 
   git tag -am 'next version' "v${version_without_patch}.${new_patch_number}"

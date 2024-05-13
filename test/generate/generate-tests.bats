@@ -447,21 +447,28 @@ EOF
   commit_with_message 'docs: a first readme'
   bump_version
   commit_with_message 'fix: small fix'
+  bump_version
   commit_with_message 'build: build script'
+  bump_version
   commit_with_message 'chore: readme tidying'
+  bump_version
   commit_with_message 'ci: initializing'
+  bump_version
   commit_with_message 'docs: added stuff in readme'
+  bump_version
   commit_with_message 'style: added a tool to handle this for us'
+  bump_version
   commit_with_message 'refactor: ci scripts'
   bump_version
   commit_with_message 'perf: enhanced ci build speed'
+  bump_version
   commit_with_message 'test: changed test framework'
   bump_version
   commit_with_message 'revert: get back with the older test framework after all'
 
   run generate.sh --bump-version
 
-  assert_pcre_match "$output" "^## \[v0.1.3\]$"
+  assert_pcre_match "$output" "^## \[v0.1.10\]$"
 }
 
 @test "generate bumping version increase the minor number only for fix commit type that are not breaking" {
@@ -469,10 +476,52 @@ EOF
   commit_with_message 'docs: a first readme'
   bump_version
   commit_with_message 'chore: some tidying'
+  bump_version
   commit_with_message 'feat: an awesome addition'
   commit_with_message 'test: tests are awesome'
 
   run generate.sh --bump-version
 
   assert_pcre_match "$output" "^## \[v0.2.0\]$"
+}
+
+@test "generate bumping version increase the major number only for breaking changes" {
+  create_git_repository
+  commit_with_message 'docs: a first readme'
+  bump_version
+  commit_with_message 'chore!: some breaking tidying'
+  commit_with_message 'feat: an awesome addition'
+  bump_version
+  commit_with_message 'fix: a fix'
+  bump_version
+  commit_with_message "test: breaking tests are awesome
+
+BREAKING CHANGE: this test breaks the world"
+  bump_version
+  commit_with_message "fix: breaking fixes are awesome
+
+BREAKING-CHANGE: breaking fix of the ..."
+
+  run generate.sh --bump-version
+
+  assert_pcre_match "$output" "^## \[v3.0.0\]$"
+}
+
+@test "generate bumping version can does not change major on misplaced breaking change footer" {
+  create_git_repository
+  commit_with_message 'docs: a first readme'
+  bump_version
+  commit_with_message 'chore!: some breaking tidying'
+  commit_with_message 'feat: an awesome addition'
+  bump_version
+  commit_with_message "feat: a mistakenly non breaking feat
+
+Move your body!!!
+BREAKING CHANGE: nope, you missed the breaking change
+
+DAMN-FOOTER:not interpreted"
+
+  run generate.sh --bump-version
+
+  refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
 }
