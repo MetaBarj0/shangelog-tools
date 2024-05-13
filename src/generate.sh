@@ -101,23 +101,30 @@ ensure_there_are_at_least_one_conventional_commit() {
   fi
 }
 
+is_repository_already_versionned() {
+  [ $(get_all_semver_tags_from_newest_to_oldest | wc -l) -gt 0 ]
+}
+
+bump_initial_version() {
+  git tag -am 'initial version' "$initial_version"
+}
+
+bump_next_version() {
+  local latest_version="$(get_all_semver_tags_from_newest_to_oldest | head -n 1)"
+}
+
 bump_version_if_asked() {
   if [ ! "$bump_version_asked" = 'true' ]; then
     return 0
   fi
 
-  local describe_output="$(git describe --abbrev=0 2>/dev/null)"
+  if ! is_repository_already_versionned; then
+    bump_initial_version
 
-  if [ "$describe_output" = "$initial_version" ]; then
-    return 0
+    return $?
   fi
 
-  if [ ! -z "$describe_output" ] && [ ! "$describe_output" = "$initial_version" ]; then
-    echo "$generate_error_bump_version_already_done" >&2
-    return 1
-  fi
-
-  git tag -am 'placeholder' "$initial_version"
+  bump_next_version
 }
 
 output_changelog() {

@@ -292,14 +292,15 @@ teardown() {
   assert_latest_annotated_tag_equals 'v0.1.0'
 }
 
-@test "bumping version several time with different initial version is meaningless and errors" {
+@test "bumping version several time with different initial version has no effect after the first bump" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
   ./generate.sh --bump-version
 
-  run -1 generate.sh --bump-version --initial-version=v1.0.0
+  run generate.sh --bump-version --initial-version=v1.0.0
 
-  assert_output "${generate_error_bump_version_already_done}"
+  assert_success
+  assert_latest_annotated_tag_equals 'v0.1.0'
 }
 
 @test "bumping with a non SemVer compliant version string is an error" {
@@ -435,4 +436,25 @@ EOF
   assert_pcre_match "$output" "^- a breaking fix ${generate_sha1_pattern}$"
   assert_pcre_match "$output" "^### feat$"
   assert_pcre_match "$output" "^- a new API ${generate_sha1_pattern}$"
+}
+
+@test "generate bumping version increase the patch number for all commit types but fix, feat and any breaking commits" {
+  skip "implement it"
+
+  create_git_repository
+  commit_with_message 'docs: a first readme'
+  create_annotated_tag 'v0.1.0'
+  commit_with_message 'build: build script'
+  commit_with_message 'chore: readme tidying'
+  commit_with_message 'ci: initializing'
+  commit_with_message 'docs: added stuff in readme'
+  commit_with_message 'style: added a tool to handle this for us'
+  commit_with_message 'refactor: ci scripts'
+  commit_with_message 'perf: enhanced ci build speed'
+  commit_with_message 'test: changed test framework'
+  commit_with_message 'revert: get back with the older test framework after all'
+
+  run generate.sh --bump-version
+
+  assert_pcre_match "$output" "^## \[v0.1.1\]$"
 }

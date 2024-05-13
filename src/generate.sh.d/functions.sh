@@ -190,7 +190,7 @@ generate_versioned_section() {
   return 0
 }
 
-get_all_semver_tags() {
+get_all_semver_tags_from_newest_to_oldest() {
   for tag in $(git tag); do
     if [ "$(git cat-file -t $tag)" = "tag" ]; then
       echo $tag
@@ -201,7 +201,7 @@ get_all_semver_tags() {
 }
 
 generate_versioned_sections() {
-  local tags="$(get_all_semver_tags)"
+  local tags="$(get_all_semver_tags_from_newest_to_oldest)"
 
   [ -z "$tags" ] && return 0
 
