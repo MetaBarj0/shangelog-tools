@@ -2,7 +2,6 @@
 
 pause_test() {
   echo "Current test tmpdir: $BATS_TEST_TMPDIR" >&3
-  echo "PATH: $PATH" >&3
   read -n1 -s
 }
 

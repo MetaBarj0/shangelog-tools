@@ -23,7 +23,7 @@ generate_conventional_commit_type_regex=\
 'fix|feat|build|chore|ci|docs|style|refactor|perf|test|revert'
 
 generate_conventional_commit_scope_title_regex=\
-'(\(.+\))?: ([^ ].*)'
+'(\(.+\))?!?: ([^ ].*)'
 
 generate_semver_regex=\
 '^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'

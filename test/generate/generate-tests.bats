@@ -419,3 +419,20 @@ EOF
 
   assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
 }
+
+@test "generate can recognize breaking change commit title" {
+  create_git_repository
+  commit_with_message 'feat: a new API'
+  commit_with_message 'fix!: a breaking fix'
+  commit_with_message 'chore(deprecation)!: a breaking tidying'
+
+  run generate.sh
+
+  assert_pcre_match "$output" "^## \[Unreleased\]$"
+  assert_pcre_match "$output" "^### chore$"
+  assert_pcre_match "$output" "^- \(deprecation\) a breaking tidying ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" "^### fix$"
+  assert_pcre_match "$output" "^- a breaking fix ${generate_sha1_pattern}$"
+  assert_pcre_match "$output" "^### feat$"
+  assert_pcre_match "$output" "^- a new API ${generate_sha1_pattern}$"
+}
