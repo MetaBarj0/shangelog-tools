@@ -2,8 +2,6 @@
 
 setup_file() {
   bats_require_minimum_version 1.5.0
-
-  PATH=/root/test/src:${PATH}
 }
 
 setup() {
@@ -15,16 +13,15 @@ setup() {
   load 'helpers/patterns.sh'
   load 'helpers/tools.sh'
 
-  mkdir -p /root/test
-  cp -r src /root/test
-  cd /root/test/src
+  cp -r src "$BATS_TEST_TMPDIR"
+  cd "$BATS_TEST_TMPDIR/src"
 
-  source ./generate.sh.d/strings.sh
+  source generate.sh.d/strings.sh
+
+  PATH="${BATS_TEST_TMPDIR}/src:${PATH}"
 }
 
 teardown() {
-  rm -rf /root/test
-
   cd /root/ringover-shangelog-tools
 }
 
@@ -165,7 +162,7 @@ teardown() {
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
   cd /root
 
-  run -1 /root/test/src/generate.sh /
+  run -1 generate.sh /
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
@@ -350,4 +347,75 @@ teardown() {
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match "$output" "$expected_output_pattern"
+}
+
+merge_tests_exepcted_output_pattern() {
+  cat << EOF
+^## \[v0\.2\.0\]$
+
+^### fix$
+
+^- another urgent fix ${generate_sha1_pattern}$
+
+^## \[v0\.1\.0\]$
+
+^### fix$
+
+^- urgent fix ${generate_sha1_pattern}$
+
+^### feat$
+
+^- a very fancy feature ${generate_sha1_pattern}$
+EOF
+}
+
+@test "generate output a correct changelog between 2 merge commits as annotated tags" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  switch_to_branch 'fix1'
+  commit_with_message 'fix: urgent fix'
+  switch_to_branch 'master'
+  merge_no_ff 'fix1'
+  create_annotated_tag 'v0.1.0'
+  switch_to_branch 'fix2'
+  commit_with_message 'fix: another urgent fix'
+  switch_to_branch 'master'
+  merge_no_ff 'fix2'
+  create_annotated_tag 'v0.2.0'
+
+  run generate.sh
+
+  assert_pcre_match "$output" "$(merge_tests_expected_output_pattern)"
+}
+
+@test "generate output a correct changelog between merge and normal commits as annotated tags" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  commit_with_message 'fix: urgent fix'
+  create_annotated_tag 'v0.1.0'
+  switch_to_branch 'fix2'
+  commit_with_message 'fix: another urgent fix'
+  switch_to_branch 'master'
+  merge_no_ff 'fix2'
+  create_annotated_tag 'v0.2.0'
+
+  run generate.sh
+
+  assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
+}
+
+@test "generate output a correct changelog between normal and merge commits as annotated tags" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  switch_to_branch 'fix1'
+  commit_with_message 'fix: urgent fix'
+  switch_to_branch 'master'
+  merge_no_ff 'fix1'
+  create_annotated_tag 'v0.1.0'
+  commit_with_message 'fix: another urgent fix'
+  create_annotated_tag 'v0.2.0'
+
+  run generate.sh
+
+  assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
 }

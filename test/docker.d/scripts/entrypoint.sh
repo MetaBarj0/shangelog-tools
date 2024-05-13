@@ -2,7 +2,7 @@
 
 alias bats=test/bats/bin/bats
 
-bats test/generate
+bats --formatter tap --jobs $(nproc) test/generate
 
 result=$?
 

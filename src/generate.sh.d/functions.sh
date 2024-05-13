@@ -99,7 +99,6 @@ list_changelog_compliant_commits_from_rev_to_tip() {
     HEAD "${rev_option}"
 }
 
-# TODO: add tests for tagged commit being a merge. ff and no ff
 list_changelog_compliant_commits_from_and_up_to() {
   local begin_rev="$1"
   local end_rev="$2"

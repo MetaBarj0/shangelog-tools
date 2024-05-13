@@ -27,3 +27,20 @@ create_annotated_tag() {
 
   git tag -am "annotated tag: $version" "$version"
 }
+
+switch_to_branch() {
+  local branch_name="$1"
+
+  if ! git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+    git checkout -b "$branch_name"
+  else
+    git switch "$branch_name"
+  fi
+}
+
+merge_no_ff() {
+  local current_branch="$(git symbolic-ref --short HEAD)"
+  local merge_branch="$1"
+
+  git merge --no-ff --commit --no-edit "$merge_branch"
+}

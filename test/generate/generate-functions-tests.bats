@@ -3,7 +3,6 @@
 setup_file() {
   bats_require_minimum_version 1.5.0
 
-  PATH=/root/test/src/generate.sh.d:${PATH}
 }
 
 setup() {
@@ -15,17 +14,16 @@ setup() {
   load 'helpers/patterns.sh'
   load 'helpers/tools.sh'
 
-  mkdir -p /root/test
-  cp -r src /root/test
-  cd /root/test/src
+  cp -r src "$BATS_TEST_TMPDIR"
+  cd "$BATS_TEST_TMPDIR/src"
 
   source generate.sh.d/functions.sh
   source generate.sh.d/strings.sh
+
+  PATH="${BATS_TEST_TMPDIR}/src/generate.sh.d:${PATH}"
 }
 
 teardown() {
-  rm -rf /root/test
-
   cd /root/ringover-shangelog-tools
 }
 

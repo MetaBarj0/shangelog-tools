@@ -11,7 +11,7 @@ RUN \
 FROM dependencies as dev_dependencies
 RUN \
   --mount=type=cache,target=/var/cache/apk \
-  apk add pcre-tools
+  apk add pcre-tools tig parallel
 
 FROM dev_dependencies as prepare_volume
 RUN mkdir -p /root/ringover-shangelog-tools
