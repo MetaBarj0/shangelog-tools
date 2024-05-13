@@ -442,10 +442,11 @@ EOF
   assert_pcre_match "$output" "^- a new API ${generate_sha1_pattern}$"
 }
 
-@test "generate bumping version increase the patch number for all commit types but fix, feat and any breaking commits" {
+@test "generate bumping version increase the patch number for all commit types but feat and any breaking commits" {
   create_git_repository
   commit_with_message 'docs: a first readme'
   bump_version
+  commit_with_message 'fix: small fix'
   commit_with_message 'build: build script'
   commit_with_message 'chore: readme tidying'
   commit_with_message 'ci: initializing'
@@ -461,4 +462,17 @@ EOF
   run generate.sh --bump-version
 
   assert_pcre_match "$output" "^## \[v0.1.3\]$"
+}
+
+@test "generate bumping version increase the minor number only for fix commit type that are not breaking" {
+  create_git_repository
+  commit_with_message 'docs: a first readme'
+  bump_version
+  commit_with_message 'chore: some tidying'
+  commit_with_message 'feat: an awesome addition'
+  commit_with_message 'test: tests are awesome'
+
+  run generate.sh --bump-version
+
+  assert_pcre_match "$output" "^## \[v0.2.0\]$"
 }

@@ -9,7 +9,7 @@ assert_pcre_match() {
   local value="$1"
   local pattern="$2"
 
-  assert echo "$value" | pcregrep -M "$pattern" 
+  assert echo "$value" | pcregrep -M "$pattern"
 }
 
 assert_line_count_equals() {

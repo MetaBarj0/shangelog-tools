@@ -109,14 +109,51 @@ bump_initial_version() {
   git tag -am 'initial version' "$initial_version"
 }
 
-bump_next_version() {
-  local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
-  local new_version_without_patch="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1.\2/')"
-  local new_patch_number="$(inc $patch_number)"
+bump_next_major() {
+  local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
 
-  git tag -am 'next version' "v${new_version_without_patch}.${new_patch_number}"
+  return 1
 }
 
+is_feat_section_generated() {
+  echo "$(generate_unreleased_section)" | pcregrep -M '^### feat$' > /dev/null
+}
+
+bump_next_minor() {
+  if ! is_feat_section_generated; then
+    return 1
+  fi
+
+  local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
+  local minor_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\2/')"
+  local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
+
+  local new_minor_number="$(inc $minor_number)"
+
+  git tag -am 'next version' "v${major_number}.${new_minor_number}.${patch_number}"
+}
+
+bump_next_patch() {
+  if [ -z "$(generate_unreleased_section)" ]; then
+    return 0
+  fi
+
+  local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
+  local version_without_patch="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1.\2/')"
+
+  local new_patch_number="$(inc $patch_number)"
+
+  git tag -am 'next version' "v${version_without_patch}.${new_patch_number}"
+}
+
+bump_next_version() {
+  bump_next_major \
+  || bump_next_minor \
+  || bump_next_patch
+
+}
+
+# TODO: move inner function to functions.sh
 bump_version_if_asked() {
   if [ ! "$bump_version_asked" = 'true' ]; then
     return 0
