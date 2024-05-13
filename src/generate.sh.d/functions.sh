@@ -1,5 +1,11 @@
 #!/bin/sh
 
+inc() {
+  bc << EOF
+  $1 + 1
+EOF
+}
+
 load_strings() {
   local script_dir="$1"
 
@@ -66,7 +72,7 @@ EOF
 }
 
 get_latest_tag() {
-  git describe --abbrev=0 2>/dev/null
+  get_all_semver_tags_from_newest_to_oldest | head -n 1
 }
 
 list_changelog_compliant_commits_reachable_from() {

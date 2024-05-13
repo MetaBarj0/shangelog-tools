@@ -344,7 +344,7 @@ teardown() {
 
 ^- a very fancy feature ${generate_sha1_pattern}$"
 
-  run generate.sh -b
+  run generate.sh
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match "$output" "$expected_output_pattern"
@@ -439,8 +439,6 @@ EOF
 }
 
 @test "generate bumping version increase the patch number for all commit types but fix, feat and any breaking commits" {
-  skip "implement it"
-
   create_git_repository
   commit_with_message 'docs: a first readme'
   create_annotated_tag 'v0.1.0'
@@ -450,11 +448,13 @@ EOF
   commit_with_message 'docs: added stuff in readme'
   commit_with_message 'style: added a tool to handle this for us'
   commit_with_message 'refactor: ci scripts'
+  create_annotated_tag 'v0.1.1'
   commit_with_message 'perf: enhanced ci build speed'
   commit_with_message 'test: changed test framework'
+  create_annotated_tag 'v0.1.2'
   commit_with_message 'revert: get back with the older test framework after all'
 
   run generate.sh --bump-version
 
-  assert_pcre_match "$output" "^## \[v0.1.1\]$"
+  assert_pcre_match "$output" "^## \[v0.1.3\]$"
 }

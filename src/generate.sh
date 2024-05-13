@@ -110,7 +110,11 @@ bump_initial_version() {
 }
 
 bump_next_version() {
-  local latest_version="$(get_all_semver_tags_from_newest_to_oldest | head -n 1)"
+  local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
+  local new_version_without_patch="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1.\2/')"
+  local new_patch_number="$(inc $patch_number)"
+
+  git tag -am 'next version' "v${new_version_without_patch}.${new_patch_number}"
 }
 
 bump_version_if_asked() {
