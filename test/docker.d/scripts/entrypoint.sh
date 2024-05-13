@@ -2,7 +2,11 @@
 
 alias bats=test/bats/bin/bats
 
-bats --formatter tap --jobs $(nproc) test/generate
+if [ -z "$1" ]; then
+  bats --formatter tap --jobs $(nproc) test/generate
+else
+  bats --formatter tap test/generate
+fi
 
 result=$?
 
