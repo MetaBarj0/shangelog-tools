@@ -327,10 +327,14 @@ teardown() {
   assert_pcre_match "$output" "$expected_output_pattern"
 }
 
+bump_version() {
+  generate.sh --bump-version > /dev/null
+}
+
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
-  ./generate.sh -b > /dev/null
+  bump_version
   commit_with_message 'fix: fixing the latest version'
   local expected_output_pattern="^## \[Unreleased\]$
 
@@ -441,17 +445,17 @@ EOF
 @test "generate bumping version increase the patch number for all commit types but fix, feat and any breaking commits" {
   create_git_repository
   commit_with_message 'docs: a first readme'
-  create_annotated_tag 'v0.1.0'
+  bump_version
   commit_with_message 'build: build script'
   commit_with_message 'chore: readme tidying'
   commit_with_message 'ci: initializing'
   commit_with_message 'docs: added stuff in readme'
   commit_with_message 'style: added a tool to handle this for us'
   commit_with_message 'refactor: ci scripts'
-  create_annotated_tag 'v0.1.1'
+  bump_version
   commit_with_message 'perf: enhanced ci build speed'
   commit_with_message 'test: changed test framework'
-  create_annotated_tag 'v0.1.2'
+  bump_version
   commit_with_message 'revert: get back with the older test framework after all'
 
   run generate.sh --bump-version
