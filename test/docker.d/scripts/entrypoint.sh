@@ -1,33 +1,108 @@
 #!/bin/sh
 
 initialize_argument_default_values() {
-  argument_passed='false'
+  argument_debug='false'
+}
+
+show_help() {
+  cat << EOF
+usage: entrypoint.sh [-h | --help] ([-d | --debug] | [-w | --watch])
+
+Run all test suites either once, or continuously as soon as a file covered by
+any test changed.
+
+Options:
+
+  -h  --help
+
+      Display this message.
+
+  -d  --debug
+
+      Run test suites in debug mode. Disable parallel execution of tests and
+      allow each test to be paused using the 'pause_test' function. Each paused
+      test will display its current directory of execution.
+      This implies '-w' or '--watch' is not set.
+
+  -w  --watch
+
+      Run test suites continuously. Each modification on file tracked by a test
+      will trigger the execution. To stop the watching process, press CTRL-C.
+      This implies '-d' or '--debug' is not set.
+EOF
 }
 
 parse_arguments() {
   initialize_argument_default_values
 
-  if [ ! -z "$1" ]; then
-    argument_passed='true'
+  local valid_args \
+  && valid_args="$(getopt -q -o hdw --long help,debug,watch -- $@)"
+
+  if [ $? -ne 0 ]; then
+    show_help
   fi
+
+  eval set -- "$valid_args"
+
+  while true; do
+    case "$1" in
+      -d | --debug)
+        argument_debug='true'
+        argument_watch='false'
+        shift
+        ;;
+      -w | --watch)
+        argument_debug='false'
+        argument_watch='true'
+        shift
+        ;;
+      -h | --help)
+        show_help
+        shift
+        break
+        ;;
+      --)
+        shift
+        break
+        ;;
+    esac
+  done
+}
+
+bats() {
+  echo test/bats/bin/bats
+}
+
+run_test_suites_parallel() {
+  $(bats) --formatter tap --jobs $(nproc) test/generate
+}
+
+run_test_suites_serial() {
+  $(bats) --formatter tap test/generate \
+  && echo Press any key to continue... \
+  && read -n1 -s
+}
+
+watch_and_run_test_suites_parallel() {
+  entr -acn ../watch-and-run-test-suites-in-parallel.sh << EOF
+$(find src -type f -name *.sh)
+EOF
 }
 
 main() {
-  local bats=test/bats/bin/bats
-
   parse_arguments "$@"
 
-  if [ "$argument_passed" = 'false' ]; then
-    $bats --formatter tap --jobs $(nproc) test/generate
-  elif [ "$argument_passed" = 'true' ]; then
-    $bats --formatter tap test/generate
+  if [ "$argument_debug" = 'false' ]; then
+    if [ "$argument_watch" = 'true' ]; then
+      watch_and_run_test_suites_parallel
+    else
+      run_test_suites_parallel
+    fi
+  elif [ "$argument_debug" = 'true' ]; then
+    run_test_suites_serial
   fi
 
   local result=$?
-
-  [ ! -z "$1" ] \
-    && echo Press any key to continue... \
-    && read -n1 -s
 
   return $result
 }

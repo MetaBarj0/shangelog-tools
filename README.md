@@ -52,22 +52,32 @@ Invoke the `generate.sh` script for a given repository. See the `--help` or
 
 ## Run all tests of this repository
 
-Go into the `test` directory and execute the `run-all-tests.sh` scripts.
-You'll need docker for this. The test suite is also designed to be runb within
-a CI/CD pipeline. it is fully automated. The exit code is 0 if all test pass or
-a non zero integer otherwise.
+Go into the `test` directory and execute the `run-all-tests.sh` scripts. You'll
+need docker for this. The test suite is also designed to be run within a CI/CD
+pipeline. It is fully automated. The exit code is 0 if all test pass or a non
+zero integer otherwise.
 
 ### Debugging
 
-Alternatively, you can pass any argument to the `run-all-tests.sh` script to
-disable parallel test execution and debug a specific test using the
-`pause_test` in any test case, should you need to do it.
-The test suite run into a docker container that is automatically deleted when
-the test suite ends its execution.
-`pause_test` allow a test to be paused (just like a breakpoint) thus, allowing
-the underlying container to live while the test is paused.
-Just run a `bash` in this container, `cd` into the test directory (given by the
-`pause_test` function) and start debug at your heart content.
+Alternatively, you can pass the `-d` or `--debug` argument to the
+`run-all-tests.sh` script to disable parallel test execution and debug a
+specific test using the `pause_test` in any test case, should you need to do
+it.
+The test suite run into a docker container that is automatically deleted
+when the test suite ends its execution. `pause_test` allow a test to be paused
+(just like a breakpoint) thus, allowing the underlying container to live while
+the test is paused. Just run a `bash` in this container, `cd` into the test
+directory (given by the `pause_test` function) and start debug at your heart
+content.
+Note that you cannot pass both `-d` and `-w` at the same time. Those arguments
+are mutually exclusive.
+
+### Watching
+
+You could also pass the `-w` or `--watch` argument to the `run-all-tests.sh`
+script to trigger test suites execution after each file execution.
+Note that you cannot pass both `-w` and `-d` at the same time. Those arguments
+are mutually exclusive.
 
 ## Package tools
 
