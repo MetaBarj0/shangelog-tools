@@ -6,14 +6,10 @@ RUN \
 FROM base as dependencies
 RUN \
   --mount=type=cache,target=/var/cache/apk \
-  apk add bash git
+  apk add man-db bash bash-doc git git-doc pcre-tools pcre-doc tig tig-doc \
+  parallel parallel-doc
 
-FROM dependencies as dev_dependencies
-RUN \
-  --mount=type=cache,target=/var/cache/apk \
-  apk add pcre-tools tig parallel
-
-FROM dev_dependencies as prepare_volume
+FROM dependencies as prepare_volume
 RUN mkdir -p /root/ringover-shangelog-tools
 VOLUME /root/ringover-shangelog-tools
 WORKDIR /root/ringover-shangelog-tools
