@@ -29,7 +29,7 @@ parse_arguments() {
   while true; do
     case "$1" in
       -b | --bump-version)
-        bump_version_asked=true
+        bump_version_asked='true'
         shift
         ;;
       -r | --git-repository)
@@ -46,6 +46,7 @@ parse_arguments() {
         break
         ;;
       -n | --no-docker)
+        no_docker_asked='true'
         shift
         break
         ;;
@@ -59,80 +60,18 @@ parse_arguments() {
   ensure_arguments_are_valid
 }
 
-change_current_directory() {
-  if [ ! -z "$1" ]; then
-    cd "$1"
+run() {
+  if [ "$no_docker_asked" = 'true' ]; then
+    run_locally
+  else
+    run_in_container
   fi
-}
-
-ensure_targeting_git_repository() {
-  ensure_current_directory_is_git_repository \
-  || ensure_script_is_within_git_repository
-
-  if [ $? -ne 0 ]; then
-    echo "${generate_error_cannot_bind_git_repository}" >&2
-    exit 1
-  fi
-}
-
-ensure_there_are_commits() {
-  local commit_count=$(git rev-list --all | wc -l)
-  if [ $commit_count -lt 1 ]; then
-    echo "${generate_error_no_commits}" >&2
-    exit 1
-  fi
-}
-
-ensure_there_are_no_pending_changes() {
-  local pending_changes="$(git status --porcelain=v1 -uno)"
-
-  if [ ! -z "$pending_changes" ]; then
-    echo "${generate_error_pending_changes}" >&2
-
-    exit 1
-  fi
-}
-
-ensure_there_are_at_least_one_conventional_commit() {
-  if ! is_there_any_conventional_commit; then
-    echo "${generate_error_no_conventional_commit_found}" >&2
-    exit 1
-  fi
-}
-
-bump_version_if_asked() {
-  if [ ! "$bump_version_asked" = 'true' ]; then
-    return 0
-  fi
-
-  if ! is_repository_already_versionned; then
-    bump_initial_version
-
-    return $?
-  fi
-
-  bump_next_version
-}
-
-output_changelog() {
-  local header="${generate_changelog_header}"
-  local sections \
-  && sections="$(generate_sections)" || return $?
-
-  echo "$header"
-  echo "$sections"
 }
 
 main() {
   load_functions \
   && parse_arguments "$@" \
-  && change_current_directory "$git_repository_directory" \
-  && ensure_targeting_git_repository \
-  && ensure_there_are_commits \
-  && ensure_there_are_no_pending_changes \
-  && ensure_there_are_at_least_one_conventional_commit \
-  && bump_version_if_asked \
-  && output_changelog
+  && run "$@"
 }
 
 main $@
