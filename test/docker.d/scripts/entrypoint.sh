@@ -86,6 +86,7 @@ run_test_suites_serial() {
 watch_and_run_test_suites_parallel() {
   entr -acn ../watch-and-run-test-suites-in-parallel.sh << EOF
 $(find src -type f -name *.sh)
+$(find test -type f -name *.bats)
 EOF
 }
 
