@@ -49,11 +49,6 @@ parse_arguments() {
         shift
         break
         ;;
-      \?)
-        show_help
-        shift
-        break
-        ;;
     esac
   done
 
