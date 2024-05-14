@@ -25,8 +25,12 @@ teardown() {
   cd /root/ringover-shangelog-tools
 }
 
+generate_no_docker() {
+  generate.sh "$@" --no-docker
+}
+
 @test "generate fails with '1' if not targeting git repository" {
-  run -1 generate.sh
+  run -1 generate_no_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
@@ -34,7 +38,7 @@ teardown() {
 @test "generate fails if the git repository does not have any commit" {
   create_git_repository
 
-  run -1 generate.sh
+  run -1 generate_no_docker
 
   assert_output "${generate_error_no_commits}"
 }
@@ -45,7 +49,7 @@ teardown() {
   touch pending.txt
   git add pending.txt
 
-  run -1 generate.sh
+  run -1 generate_no_docker
 
   assert_output "$generate_error_pending_changes"
 }
@@ -57,7 +61,7 @@ teardown() {
   commit_with_message 'chore:       too much spaces'
   commit_with_message 'chore(scope):       too much spaces'
 
-  run -1 generate.sh
+  run -1 generate_no_docker
 
   assert_output "$generate_error_no_conventional_commit_found"
 }
@@ -77,7 +81,7 @@ teardown() {
 ^- Second commit ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
 
-  run generate.sh
+  run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_pcre_match "${output}" "${expected_output_pattern}"
@@ -98,7 +102,7 @@ teardown() {
 ^- \(a scope\) Second commit ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
 
-  run generate.sh
+  run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_pcre_match "${output}" "${expected_output_pattern}"
@@ -112,7 +116,7 @@ teardown() {
   commit_with_message 'feat(last feature): latest fancy feature'
   commit_with_message 'chore(style): reformat, more stylish'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_pcre_match "$output" "^## \[Unreleased\]$
@@ -142,7 +146,7 @@ teardown() {
   commit_with_message 'test: a test commit'
   commit_with_message 'revert: a revert commit'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_output --partial "## [Unreleased]"
@@ -162,7 +166,7 @@ teardown() {
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
   cd /root
 
-  run -1 generate.sh /
+  run -1 generate_no_docker /
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
@@ -172,7 +176,7 @@ teardown() {
   commit_with_message 'chore: a first commit'
   cd -
 
-  run generate.sh -r ../inner_git_dir
+  run generate_no_docker -r ../inner_git_dir
 
   assert_success
 }
@@ -181,7 +185,7 @@ teardown() {
   create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
 
-  run ../src/generate.sh
+  run ../src/generate.sh -n
 
   assert_success
 }
@@ -192,7 +196,7 @@ teardown() {
   create_git_repository_and_cd_in ../yet_another_git_dir
   commit_with_message 'test: the current directory git repository'
 
-  run ../src/generate.sh -r ../other_git_dir
+  run ../src/generate.sh -r ../other_git_dir -n
 
   assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
@@ -202,7 +206,7 @@ teardown() {
   commit_with_message 'fix: a fix commit'
   cd ..
 
-  run src/generate.sh
+  run src/generate.sh -n
 
   assert_success
 }
@@ -214,7 +218,7 @@ teardown() {
   commit_with_message 'test: the argument git repository'
   cd ..
 
-  run src/generate.sh -r other_git_dir
+  run src/generate.sh -r other_git_dir -n
 
   assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
@@ -225,7 +229,7 @@ teardown() {
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
 
-  run ../src/generate.sh
+  run ../src/generate.sh -n
 
   assert_pcre_match "$output" $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
 }
@@ -238,7 +242,7 @@ teardown() {
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
 
-  run ../src/generate.sh --git-repository ../yet_another_git_dir
+  run ../src/generate.sh --git-repository ../yet_another_git_dir --no-docker
 
   assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
@@ -247,7 +251,7 @@ teardown() {
   create_git_repository
   commit_with_message 'fix: a fix commit'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_pcre_match "$output" "^### fix$
 
@@ -258,7 +262,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run generate.sh --bump-version
+  run generate_no_docker --bump-version
 
   assert_latest_annotated_tag_equals 'v0.1.0'
 }
@@ -267,7 +271,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run generate.sh
+  run generate_no_docker
 
   refute assert_latest_annotated_tag_equals 'v0.1.0'
 }
@@ -276,7 +280,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run generate.sh --bump-version --initial-version=v5.0.0
+  run generate_no_docker --bump-version --initial-version=v5.0.0
 
   assert_latest_annotated_tag_equals 'v5.0.0'
 }
@@ -284,9 +288,9 @@ teardown() {
 @test "bumping the same initial version on an already version-bumped repository has no effect" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
-  ./generate.sh --bump-version
+  generate_no_docker --bump-version
 
-  run generate.sh --bump-version
+  run generate_no_docker --bump-version
 
   assert_success
   assert_latest_annotated_tag_equals 'v0.1.0'
@@ -295,9 +299,9 @@ teardown() {
 @test "bumping version several time with different initial version has no effect after the first bump" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
-  ./generate.sh --bump-version
+  generate_no_docker --bump-version
 
-  run generate.sh --bump-version --initial-version=v1.0.0
+  run generate_no_docker --bump-version --initial-version=v1.0.0
 
   assert_success
   assert_latest_annotated_tag_equals 'v0.1.0'
@@ -307,7 +311,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run -1 generate.sh --bump-version --initial-version=wip_non_semver
+  run -1 generate_no_docker --bump-version --initial-version=wip_non_semver
 
   assert_output "${generate_error_bump_version_not_semver}"
 }
@@ -321,14 +325,14 @@ teardown() {
 
 ^- a very fancy feature ${generate_sha1_pattern}$"
 
-  run generate.sh -b
+  run generate_no_docker -b
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match "$output" "$expected_output_pattern"
 }
 
 bump_version() {
-  generate.sh --bump-version > /dev/null
+  generate_no_docker --bump-version > /dev/null
 }
 
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
@@ -348,7 +352,7 @@ bump_version() {
 
 ^- a very fancy feature ${generate_sha1_pattern}$"
 
-  run generate.sh
+  run generate_no_docker
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match "$output" "$expected_output_pattern"
@@ -388,7 +392,7 @@ EOF
   merge_no_ff 'fix2'
   create_annotated_tag 'v0.2.0'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_pcre_match "$output" "$(merge_tests_expected_output_pattern)"
 }
@@ -404,7 +408,7 @@ EOF
   merge_no_ff 'fix2'
   create_annotated_tag 'v0.2.0'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
 }
@@ -420,7 +424,7 @@ EOF
   commit_with_message 'fix: another urgent fix'
   create_annotated_tag 'v0.2.0'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
 }
@@ -431,7 +435,7 @@ EOF
   commit_with_message 'fix!: a breaking fix'
   commit_with_message 'chore(deprecation)!: a breaking tidying'
 
-  run generate.sh
+  run generate_no_docker
 
   assert_pcre_match "$output" "^## \[Unreleased\]$"
   assert_pcre_match "$output" "^### chore$"
@@ -466,7 +470,7 @@ EOF
   bump_version
   commit_with_message 'revert: get back with the older test framework after all'
 
-  run generate.sh --bump-version
+  run generate_no_docker --bump-version
 
   assert_pcre_match "$output" "^## \[v0.1.10\]$"
 }
@@ -480,7 +484,7 @@ EOF
   commit_with_message 'feat: an awesome addition'
   commit_with_message 'test: tests are awesome'
 
-  run generate.sh --bump-version
+  run generate_no_docker --bump-version
 
   assert_pcre_match "$output" "^## \[v0.2.0\]$"
 }
@@ -502,7 +506,7 @@ BREAKING CHANGE: this test breaks the world"
 
 BREAKING-CHANGE: breaking fix of the ..."
 
-  run generate.sh --bump-version
+  run generate_no_docker --bump-version
 
   assert_pcre_match "$output" "^## \[v3.0.0\]$"
 }
@@ -521,7 +525,7 @@ BREAKING CHANGE: nope, you missed the breaking change
 
 DAMN-FOOTER:not interpreted"
 
-  run generate.sh --bump-version
+  run generate_no_docker --bump-version
 
   refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
 }

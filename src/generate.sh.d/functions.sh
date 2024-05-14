@@ -232,6 +232,8 @@ generate_sections() {
 }
 
 show_help() {
+  local exit_code="${1:-0}"
+
   cat << EOF
 usage: generate.sh [-h | --help] [-b | --bump-version]
                    [-i | --initial-version] [-r | --git-repository]
@@ -281,7 +283,7 @@ Examples:
     option otherwise the script exits with an error.
 EOF
 
-  exit 0
+  exit $exit_code
 }
 
 is_repository_already_versionned() {

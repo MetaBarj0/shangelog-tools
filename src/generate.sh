@@ -18,10 +18,10 @@ parse_arguments() {
   initialize_argument_default_values
 
   local valid_args \
-  && valid_args="$(getopt -q -o br:i:h --long bump-version,git-repository:,initial-version:,help -- $@)"
+  && valid_args="$(getopt -q -o br:i:hn --long bump-version,git-repository:,initial-version:,help,no-docker -- $@)"
 
   if [ $? -ne 0 ]; then
-    show_help
+    show_help 1
   fi
 
   eval set -- "$valid_args"
@@ -42,6 +42,10 @@ parse_arguments() {
         ;;
       -h | --help)
         show_help
+        shift
+        break
+        ;;
+      -n | --no-docker)
         shift
         break
         ;;
