@@ -274,6 +274,11 @@ Examples:
     means creating an annotated tag at the tip of the current branch. If this
     is the first time you bump the version and you do not specify the
     --initial-version option, v0.1.0 will be used by default.
+
+    ./generate.sh -b -i v1.0.0 will print the changelog on the standard output
+    and bump the currently unreleased changes on the respository to the
+    'v1.0.0' version. You MUST use a SemVer compliant version for the '-i'
+    option otherwise the script exits with an error.
 EOF
 
   exit 0
