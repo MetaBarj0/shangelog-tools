@@ -1,19 +1,35 @@
 #!/bin/sh
 
-alias bats=test/bats/bin/bats
+initialize_argument_default_values() {
+  argument_passed='false'
+}
 
-if [ -z "$1" ]; then
-  bats --formatter tap --jobs $(nproc) test/generate
-else
-  bats --formatter tap test/generate
-fi
+parse_arguments() {
+  initialize_argument_default_values
 
-result=$?
+  if [ ! -z "$1" ]; then
+    argument_passed='true'
+  fi
+}
 
-[ ! -z "$1" ] \
-  && echo Press any key to continue... \
-  && read -n1 -s
+main() {
+  local bats=test/bats/bin/bats
 
-unalias bats
+  parse_arguments "$@"
 
-exit $result
+  if [ "$argument_passed" = 'false' ]; then
+    $bats --formatter tap --jobs $(nproc) test/generate
+  elif [ "$argument_passed" = 'true' ]; then
+    $bats --formatter tap test/generate
+  fi
+
+  local result=$?
+
+  [ ! -z "$1" ] \
+    && echo Press any key to continue... \
+    && read -n1 -s
+
+  return $result
+}
+
+main "$@"
