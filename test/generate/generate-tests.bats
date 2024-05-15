@@ -534,7 +534,6 @@ DAMN-FOOTER:not interpreted"
   refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
 }
 
-# bats test_tags=bats:focus
 @test "generate in docker fails with '1' if not targeting git repository" {
   run -1 generate_in_docker
 

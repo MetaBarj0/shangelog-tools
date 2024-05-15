@@ -96,7 +96,8 @@ EOF
 main() {
   parse_arguments "$@"
 
-  /root/sync-bind-mount-to-volume.sh &
+  /root/initial-sync-bind-mount-to-volume.sh
+  /root/loop-sync-bind-mount-to-volume.sh &
 
   if [ "$argument_debug" = 'false' ]; then
     if [ "$argument_watch" = 'true' ]; then
