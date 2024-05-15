@@ -563,9 +563,18 @@ remove_image() {
   docker image rm $image_id >/dev/null
 }
 
+is_no_docker_option_missing() {
+  while [ ! -z "$1" ]; do
+    if [ "$1" = '-n' ] || [ "$1" = '--no-docker' ];then
+      return 1
+    fi
+
+    shift
+  done
+}
+
 run_in_container() {
-  parse_arguments "$@" \
-  && [ "$no_docker_asked" = 'false' ] \
+  is_no_docker_option_missing "$@" \
   && local image_id \
   && image_id=$(build_image) \
   && run_container $image_id "$@"
