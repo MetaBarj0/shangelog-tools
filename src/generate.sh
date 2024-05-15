@@ -64,7 +64,7 @@ run() {
   if [ "$no_docker_asked" = 'true' ]; then
     run_locally
   else
-    run_in_container
+    run_in_container "$@"
   fi
 }
 

@@ -13,7 +13,9 @@ load_strings() {
 }
 
 initialize_argument_default_values() {
-  initial_version=v0.1.0
+  bump_version_asked='false'
+  initial_version='v0.1.0'
+  no_docker_asked='false'
 }
 
 ensure_arguments_are_valid() {
@@ -479,6 +481,52 @@ run_locally() {
   && output_changelog
 }
 
+build_image() {
+  local image_id=$(docker build -q - << EOF
+FROM alpine:latest as base
+RUN \
+  --mount=type=cache,target=/var/cache/apk \
+  apk update
+
+FROM base as dependencies
+RUN \
+  --mount=type=cache,target=/var/cache/apk \
+  apk add bash git pcre-tools
+
+FROM dependencies as prepare_volume
+VOLUME /root/ringover-shangelog-volume
+WORKDIR /root/ringover-shangelog-volume
+EOF
+  )
+
+  echo $image_id
+}
+
+run_container() {
+  local image_id=$1
+
+  shift
+
+  docker run \
+    --rm \
+    -v ringover-shangelog-tester-volume:/root/ringover-shangelog-volume:ro \
+    $image_id \
+    /bin/ash -c \
+    "mkdir /root/run \
+      && cp -r src /root/run \
+      && cd /root/run/src \
+      && ./generate.sh -n "$@""
+}
+
+remove_image() {
+  local image_id=$1
+
+  docker image rm $image_id
+}
+
 run_in_container() {
-  :
+  local image_id \
+  && image_id=$(build_image) \
+  && run_container $image_id "$@" \
+  && remove_image $image_id
 }
