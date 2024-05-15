@@ -237,6 +237,7 @@ show_help() {
   cat << EOF
 usage: generate.sh [-h | --help] [-b | --bump-version]
                    [-i | --initial-version] [-r | --git-repository]
+                   [-n | --no-docker]
 
 Output the changelog of a chosen git repository.
 
@@ -264,6 +265,17 @@ Options:
       The git repository to target. Useful when the generate.sh script is not
       within a git repository or the current directory is not the git directory
       you want to generate a changelog from.
+
+  -n | --no-docker
+
+      Do not invoke this script within a docker container. It is useful if you
+      want to run it on a GNU environment because this script relies heavily on
+      GNU tools.
+      By design, this tool has been thought to be run on any platform that
+      supports docker container execution. If this option is not specified, an
+      image is built and a container is run using it. At the end of the
+      invocation, everything is removed (but the build cache, for obvious
+      performance reasons) as if this script was run on the host machine.
 
 Examples:
 
@@ -304,7 +316,7 @@ is_it_breaking_commit_summary() {
   local commit_summary="$1"
   local breaking_commit_summary_pattern="(${generate_conventional_commit_type_regex})${generate_conventional_breaking_commit_scope_title_regex}"
 
-  echo "$commit_summary" | grep -E "${breaking_commit_summary_pattern}" >/dev/null 
+  echo "$commit_summary" | grep -E "${breaking_commit_summary_pattern}" >/dev/null
 }
 
 extract_footer() {
@@ -329,7 +341,7 @@ is_it_breaking_commit_body() {
   local footer="$(extract_footer "$commit_body")"
   local breaking_commit_footer_pattern="^BREAKING( |-)CHANGE: .+$"
 
-  echo "$footer" | grep -E "${breaking_commit_footer_pattern}" >/dev/null 
+  echo "$footer" | grep -E "${breaking_commit_footer_pattern}" >/dev/null
 }
 
 is_there_breaking_changes() {
