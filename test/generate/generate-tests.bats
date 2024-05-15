@@ -29,6 +29,10 @@ generate_no_docker() {
   generate.sh "$@" --no-docker
 }
 
+generate_in_docker() {
+  generate.sh "$@"
+}
+
 @test "generate fails with '1' if not targeting git repository" {
   run -1 generate_no_docker
 
@@ -528,4 +532,11 @@ DAMN-FOOTER:not interpreted"
   run generate_no_docker --bump-version
 
   refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
+}
+
+# bats test_tags=bats:focus
+@test "generate in docker fails with '1' if not targeting git repository" {
+  run -1 generate_in_docker
+
+  assert_output "${generate_error_cannot_bind_git_repository}"
 }

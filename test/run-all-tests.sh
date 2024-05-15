@@ -17,16 +17,22 @@ docker build \
   "${script_dir}/docker.d" \
   >/dev/null
 
+echo 'Creating a volume...'
+docker volume create ringover-shangelog-tester-volume >/dev/null
+
 echo 'Running tests...'
 docker run \
   --rm \
   -it \
   -v "${script_dir}/../":/root/ringover-shangelog-tools/:ro \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -v ringover-shangelog-tester-volume:/root/volume \
   shangelog-tools-tester "$@"
 
 result=$?
 
 echo 'Cleaning up the mess...'
-docker image rm shangelog-tools-tester > /dev/null
+docker volume rm ringover-shangelog-tester-volume >/dev/null
+docker image rm shangelog-tools-tester >/dev/null
 
 exit $result

@@ -7,7 +7,7 @@ FROM base as dependencies
 RUN \
   --mount=type=cache,target=/var/cache/apk \
   apk add man-db bash bash-doc git git-doc pcre-tools pcre-doc tig tig-doc \
-  parallel parallel-doc entr entr-doc
+  parallel parallel-doc entr entr-doc docker docker-doc rsync rsync-doc
 
 FROM dependencies as prepare_volume
 RUN mkdir -p /root/ringover-shangelog-tools
