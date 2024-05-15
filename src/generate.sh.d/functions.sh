@@ -12,6 +12,52 @@ load_strings() {
   source "${script_dir}/generate.sh.d/strings.sh"
 }
 
+parse_arguments() {
+  initialize_argument_default_values
+
+  local valid_args \
+  && valid_args="$(getopt -q -o br:i:hn --long bump-version,git-repository:,initial-version:,help,no-docker -- $@)"
+
+  if [ $? -ne 0 ]; then
+    show_help 1
+  fi
+
+  eval set -- "$valid_args"
+
+  while true; do
+    case "$1" in
+      -b | --bump-version)
+        bump_version_asked='true'
+        shift
+        ;;
+      -r | --git-repository)
+        git_repository_directory="$2"
+        shift 2
+        ;;
+      -i | --initial-version)
+        initial_version="$2"
+        shift 2
+        ;;
+      -h | --help)
+        show_help
+        shift
+        break
+        ;;
+      -n | --no-docker)
+        no_docker_asked='true'
+        shift
+        break
+        ;;
+      --)
+        shift
+        break
+        ;;
+    esac
+  done
+
+  ensure_arguments_are_valid
+}
+
 initialize_argument_default_values() {
   bump_version_asked='false'
   initial_version='v0.1.0'
@@ -471,16 +517,6 @@ output_changelog() {
   echo "$sections"
 }
 
-run_locally() {
-  change_current_directory "$git_repository_directory" \
-  && ensure_targeting_git_repository \
-  && ensure_there_are_commits \
-  && ensure_there_are_no_pending_changes \
-  && ensure_there_are_at_least_one_conventional_commit \
-  && bump_version_if_asked \
-  && output_changelog
-}
-
 build_image() {
   local image_id=$(docker build -q - << EOF
 FROM alpine:latest as base
@@ -515,18 +551,33 @@ run_container() {
     "mkdir /root/run \
       && cp -r src /root/run \
       && cd /root/run/src \
-      && ./generate.sh -n "$@""
+      && ./generate.sh "$@" --no-docker" \
+  ;  local exit_code=$? \
+  && remove_image $image_id \
+  && exit $exit_code
 }
 
 remove_image() {
   local image_id=$1
 
-  docker image rm $image_id
+  docker image rm $image_id >/dev/null
 }
 
 run_in_container() {
-  local image_id \
+  parse_arguments "$@" \
+  && [ "$no_docker_asked" = 'false' ] \
+  && local image_id \
   && image_id=$(build_image) \
-  && run_container $image_id "$@" \
-  && remove_image $image_id
+  && run_container $image_id "$@"
+}
+
+run_locally() {
+  parse_arguments "$@" \
+  && change_current_directory "$git_repository_directory" \
+  && ensure_targeting_git_repository \
+  && ensure_there_are_commits \
+  && ensure_there_are_no_pending_changes \
+  && ensure_there_are_at_least_one_conventional_commit \
+  && bump_version_if_asked \
+  && output_changelog
 }
