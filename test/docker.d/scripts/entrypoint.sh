@@ -96,6 +96,8 @@ EOF
 main() {
   parse_arguments "$@"
 
+  /root/sync-bind-mount-to-volume.sh &
+
   if [ "$argument_debug" = 'false' ]; then
     if [ "$argument_watch" = 'true' ]; then
       watch_and_run_test_suites_parallel

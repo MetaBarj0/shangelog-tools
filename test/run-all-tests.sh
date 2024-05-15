@@ -26,7 +26,7 @@ docker run \
   -it \
   -v "${script_dir}/../":/root/ringover-shangelog-tools/:ro \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  -v ringover-shangelog-tester-volume:/root/volume \
+  -v ringover-shangelog-tester-volume:/root/ringover-shangelog-volume \
   shangelog-tools-tester "$@"
 
 result=$?
