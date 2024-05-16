@@ -10,7 +10,6 @@ RUN \
   parallel parallel-doc entr entr-doc docker docker-doc rsync rsync-doc
 
 FROM dependencies as prepare_volume
-VOLUME /root/ringover-shangelog-volume
 RUN mkdir -p /root/ringover-shangelog-tools
 VOLUME /root/ringover-shangelog-tools
 WORKDIR /root/ringover-shangelog-tools
