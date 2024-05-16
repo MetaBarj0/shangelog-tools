@@ -18,10 +18,14 @@ docker build \
   >/dev/null
 
 echo 'Running tests...'
+# https://bats-core.readthedocs.io/en/stable/writing-tests.html#special-variables
+# for explanation about $BATS_TMPDIR and /tmp
 docker run \
   --init --rm -it \
+  -e TMPDIR=/tmp \
   -v "${script_dir}/../":/root/ringover-shangelog-tools/:ro \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -v "${script_dir}/test_output":/tmp \
   shangelog-tools-tester "$@"
 
 result=$?
