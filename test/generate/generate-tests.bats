@@ -168,9 +168,10 @@ generate_in_docker() {
 }
 
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
-  cd /root
+  mkdir inner_directory
+  cd inner_directory
 
-  run -1 generate_no_docker /
+  run -1 generate_no_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
@@ -534,8 +535,21 @@ DAMN-FOOTER:not interpreted"
   refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
 }
 
+# bats test_tags=bats:focus
 @test "generate in docker fails with '1' if not targeting git repository" {
   run -1 generate_in_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
+}
+
+@test "generate in docker fails if there is pending changes in the targeted repository" {
+  skip refactoring in progress
+  create_git_repository
+  commit_with_message 'chore: First conventional chore commit'
+  touch pending.txt
+  git add pending.txt
+
+  run -1 generate_in_docker
+
+  assert_output "$generate_error_pending_changes"
 }
