@@ -529,29 +529,21 @@ DAMN-FOOTER:not interpreted"
 }
 
 @test "generate in docker fails with '1' if not targeting git repository" {
-  local script_directory="$(override_test_directory_bind_mount_with "${GENERATE_SCRIPT_DIR}")"
-  local current_directory="$(override_test_directory_bind_mount_with "$(pwd -P)")"
-
-  export SCRIPT_DIRECTORY_OVERRIDE="${script_directory}"
-  export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
 
   run -1 generate_in_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
 
-# bats test_tags=bats:focus
 @test "generate in docker fails if there is pending changes in the targeted repository" {
   create_git_repository
   commit_with_message 'chore: First conventional chore commit'
   touch pending.txt
   git add pending.txt
-
-  local script_directory="$(override_test_directory_bind_mount_with "${GENERATE_SCRIPT_DIR}")"
-  local current_directory="$(override_test_directory_bind_mount_with "$(pwd -P)")"
-
-  export SCRIPT_DIRECTORY_OVERRIDE="${script_directory}"
-  export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
 
   run -1 generate_in_docker
 

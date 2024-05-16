@@ -38,3 +38,15 @@ override_test_directory_bind_mount_with() {
   echo "$current_working_directory" \
   | sed -E "s%${BATS_TMPDIR}%${HOST_TEST_OUTPUT_DIR}%"
 }
+
+override_script_directory_for_bind_mount_with() {
+  local script_directory="$(override_test_directory_bind_mount_with "$1")"
+
+  export SCRIPT_DIRECTORY_OVERRIDE="${script_directory}"
+}
+
+override_current_directory_for_bind_mount_with() {
+  local current_directory="$(override_test_directory_bind_mount_with "$1")"
+
+  export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
+}

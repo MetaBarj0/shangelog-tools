@@ -6,6 +6,10 @@ inc() {
 EOF
 }
 
+print_random_small_string() {
+  dd if=/dev/urandom ibs=8 count=1 status=none | base64
+}
+
 get_script_directory() {
   if [ -z "${SCRIPT_DIRECTORY_OVERRIDE}" ]; then
     echo "$(get_script_directory_before_override)"
@@ -555,6 +559,8 @@ VOLUME /root/script_directory
 
 FROM prepare_volume
 WORKDIR /root/current_directory
+# To ensure identical content create different images allowing test to be run in parallel
+LABEL $(print_random_small_string)
 EOF
   )
 
