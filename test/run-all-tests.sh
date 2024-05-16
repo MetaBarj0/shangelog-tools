@@ -23,6 +23,7 @@ echo 'Running tests...'
 docker run \
   --init --rm -it \
   -e TMPDIR=/tmp \
+  -e HOST_TEST_OUTPUT_DIR="${script_dir}/test_output" \
   -v "${script_dir}/../":/root/ringover-shangelog-tools/:ro \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -v "${script_dir}/test_output":/tmp \

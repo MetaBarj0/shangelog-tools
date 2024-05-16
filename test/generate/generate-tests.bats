@@ -19,18 +19,11 @@ setup() {
   source generate.sh.d/strings.sh
 
   PATH="${BATS_TEST_TMPDIR}/src:${PATH}"
+  GENERATE_SCRIPT_DIR="$(pwd -P)"
 }
 
 teardown() {
   cd /root/ringover-shangelog-tools
-}
-
-generate_no_docker() {
-  generate.sh "$@" --no-docker
-}
-
-generate_in_docker() {
-  generate.sh "$@"
 }
 
 @test "generate fails with '1' if not targeting git repository" {
@@ -535,15 +528,20 @@ DAMN-FOOTER:not interpreted"
   refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
 }
 
+# bats test_tags=bats:focus
 @test "generate in docker fails with '1' if not targeting git repository" {
-  skip refactoring in progress
+  local script_directory="$(override_test_directory_bind_mount_with "${GENERATE_SCRIPT_DIR}")"
+  local current_directory="$(override_test_directory_bind_mount_with "$(pwd -P)")"
+
+  export SCRIPT_DIRECTORY_OVERRIDE="${script_directory}"
+  export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
+
   run -1 generate_in_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
 
 @test "generate in docker fails if there is pending changes in the targeted repository" {
-  skip refactoring in progress
   create_git_repository
   commit_with_message 'chore: First conventional chore commit'
   touch pending.txt

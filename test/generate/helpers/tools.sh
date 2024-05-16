@@ -23,3 +23,18 @@ EOF
 print_test() {
   echo "<<<$@>>>" >&3
 }
+
+generate_no_docker() {
+  generate.sh "$@" --no-docker
+}
+
+generate_in_docker() {
+  generate.sh "$@"
+}
+
+override_test_directory_bind_mount_with() {
+  local current_working_directory="$1"
+
+  echo "$current_working_directory" \
+  | sed -E "s%${BATS_TMPDIR}%${HOST_TEST_OUTPUT_DIR}%"
+}

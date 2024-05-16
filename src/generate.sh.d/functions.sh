@@ -6,6 +6,22 @@ inc() {
 EOF
 }
 
+get_script_directory() {
+  if [ -z "${SCRIPT_DIRECTORY_OVERRIDE}" ]; then
+    echo "$(get_script_directory_before_override)"
+  else
+    echo "${SCRIPT_DIRECTORY_OVERRIDE}"
+  fi
+}
+
+get_current_directory() {
+  if [ -z "${CURRENT_DIRECTORY_OVERRIDE}" ]; then
+    pwd -P
+  else
+    echo "${CURRENT_DIRECTORY_OVERRIDE}"
+  fi
+}
+
 load_strings() {
   local script_dir="$1"
 
@@ -530,8 +546,15 @@ RUN \
   apk add bash git pcre-tools
 
 FROM dependencies as prepare_volume
-VOLUME /root/ringover-shangelog-volume
-WORKDIR /root/ringover-shangelog-volume
+WORKDIR /root
+RUN mkdir -p \
+  current_directory \
+  script_directory
+VOLUME /root/current_directory
+VOLUME /root/script_directory
+
+FROM prepare_volume
+WORKDIR /root/current_directory
 EOF
   )
 
@@ -544,14 +567,12 @@ run_container() {
   shift
 
   docker run \
-    --rm \
-    -v ringover-shangelog-tester-volume:/root/ringover-shangelog-volume:ro \
+    --init --rm \
+    -v "$(get_current_directory)":/root/current_directory \
+    -v "$(get_script_directory)":/root/script_directory \
     $image_id \
     /bin/ash -c \
-    "mkdir /root/run \
-      && cp -r src /root/run \
-      && cd /root/run/src \
-      && ./generate.sh "$@" --no-docker" \
+    "/root/script_directory/generate.sh "$@" --no-docker" \
   ;  local exit_code=$? \
   && remove_image $image_id \
   && exit $exit_code
