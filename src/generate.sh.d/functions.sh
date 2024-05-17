@@ -632,7 +632,10 @@ parse_git_repository_option() {
   while [ ! -z "$1" ]; do
     if [ "$1" = '-r' ] || [ "$1" = '--git-repository' ];then
       shift
-      git_repository_directory="$1"
+
+      cd "$1" >/dev/null 2>&1
+      git_repository_directory="$(pwd -P)"
+      cd - >/dev/null 2>&1
 
       return 0
     fi
