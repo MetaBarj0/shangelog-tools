@@ -26,6 +26,22 @@ get_current_directory() {
   fi
 }
 
+get_repository_directory() {
+  local result
+
+  if [ -z "${git_repository_directory}" ]; then
+    result="$(get_current_directory)"
+  else
+    if [ -z "${REPOSITORY_DIRECTORY_OVERRIDE}" ]; then
+      result="${git_repository_directory}"
+    else
+      result="${REPOSITORY_DIRECTORY_OVERRIDE}"
+    fi
+  fi
+
+  echo "$result"
+}
+
 load_strings() {
   local script_dir="$1"
 
@@ -553,9 +569,11 @@ FROM dependencies as prepare_volume
 WORKDIR /root
 RUN mkdir -p \
   current_directory \
-  script_directory
+  script_directory \
+  repository_directory
 VOLUME /root/current_directory
 VOLUME /root/script_directory
+VOLUME /root/repository_directory
 
 FROM prepare_volume
 WORKDIR /root/current_directory
@@ -576,9 +594,14 @@ run_container() {
     --init --rm \
     -v "$(get_current_directory)":/root/current_directory \
     -v "$(get_script_directory)":/root/script_directory \
+    -v "$(get_repository_directory)":/root/repository_directory \
     $image_id \
     /bin/ash -c \
-    "/root/script_directory/generate.sh "$@" --no-docker" \
+    "$(cat << EOF
+    read -n1 -s
+/root/script_directory/generate.sh $@ --git-repository /root/repository_directory --no-docker
+EOF
+    )" \
   ;  local exit_code=$? \
   && remove_image $image_id \
   && exit $exit_code
@@ -590,6 +613,8 @@ remove_image() {
   docker image rm $image_id >/dev/null
 }
 
+# specific substitute to getopt that is not the same on all platforms
+# I need to evaluate this option to know if I have to run a container
 is_no_docker_option_missing() {
   while [ ! -z "$1" ]; do
     if [ "$1" = '-n' ] || [ "$1" = '--no-docker' ];then
@@ -600,8 +625,25 @@ is_no_docker_option_missing() {
   done
 }
 
+# specific substitute to getopt that is not the same on all platforms
+# I need to evaluate this option to know how to bind volumes on the container I
+# need to run
+parse_git_repository_option() {
+  while [ ! -z "$1" ]; do
+    if [ "$1" = '-r' ] || [ "$1" = '--git-repository' ];then
+      shift
+      git_repository_directory="$1"
+
+      return 0
+    fi
+
+    shift
+  done
+}
+
 run_in_container() {
   is_no_docker_option_missing "$@" \
+  && parse_git_repository_option "$@" \
   && local image_id \
   && image_id=$(build_image) \
   && run_container $image_id "$@"
@@ -609,7 +651,7 @@ run_in_container() {
 
 run_locally() {
   parse_arguments "$@" \
-  && change_current_directory "$git_repository_directory" \
+  && change_current_directory "${git_repository_directory}" \
   && ensure_targeting_git_repository \
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \

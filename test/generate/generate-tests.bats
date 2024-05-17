@@ -550,3 +550,16 @@ DAMN-FOOTER:not interpreted"
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
+
+@test "generate in docker must succeed when invoked outside of a git repository, the current directory is not a git repository and the argument targets a git repository" {
+  create_git_repository_and_cd_in ../inner_git_dir
+  commit_with_message 'chore: a first commit'
+  cd -
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_repository_directory_for_bind_mount_with ../inner_git_dir
+
+  run generate_in_docker -r ../inner_git_dir
+
+  assert_success
+}

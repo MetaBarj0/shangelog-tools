@@ -50,3 +50,15 @@ override_current_directory_for_bind_mount_with() {
 
   export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
 }
+
+override_repository_directory_for_bind_mount_with() {
+  cd "$1" >/dev/null 2>&1
+
+  local path="$(pwd -P)"
+
+  cd - >/dev/null 2>&1
+
+  local repository_directory="$(override_test_directory_bind_mount_with "${path}")"
+
+  export REPOSITORY_DIRECTORY_OVERRIDE="${repository_directory}"
+}
