@@ -39,14 +39,14 @@ override_test_directory_bind_mount_with() {
   | sed -E "s%${BATS_TMPDIR}%${HOST_TEST_OUTPUT_DIR}%"
 }
 
-override_script_directory_for_bind_mount_with() {
-  local script_directory="$(override_test_directory_bind_mount_with "$1")"
+override_script_directory_for_bind_mount() {
+  local script_directory="$(override_test_directory_bind_mount_with "${BATS_TEST_TMPDIR}/src")"
 
   export SCRIPT_DIRECTORY_OVERRIDE="${script_directory}"
 }
 
-override_current_directory_for_bind_mount_with() {
-  local current_directory="$(override_test_directory_bind_mount_with "$1")"
+override_current_directory_for_bind_mount() {
+  local current_directory="$(override_test_directory_bind_mount_with "$(pwd -P)")"
 
   export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
 }

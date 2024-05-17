@@ -19,7 +19,6 @@ setup() {
   source generate.sh.d/strings.sh
 
   PATH="${BATS_TEST_TMPDIR}/src:${PATH}"
-  GENERATE_SCRIPT_DIR="$(pwd -P)"
 }
 
 teardown() {
@@ -533,8 +532,8 @@ DAMN-FOOTER:not interpreted"
   commit_with_message 'chore: First conventional chore commit'
   touch pending.txt
   git add pending.txt
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
 
   run -1 generate_in_docker
 
@@ -542,9 +541,8 @@ DAMN-FOOTER:not interpreted"
 }
 
 @test "generate in docker must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  mkdir inner_directory
-  override_current_directory_for_bind_mount_with inner_directory
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
 
   run -1 generate_no_docker
 
@@ -555,8 +553,8 @@ DAMN-FOOTER:not interpreted"
   create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
   cd -
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
   override_repository_directory_for_bind_mount_with ../inner_git_dir
 
   run generate_in_docker -r ../inner_git_dir
@@ -567,8 +565,8 @@ DAMN-FOOTER:not interpreted"
 @test "generate in docker must succeed when outside of a git repository, the current directory is a git repository, with no argument specified" {
   create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
 
   run ../src/generate.sh
 
@@ -580,8 +578,8 @@ DAMN-FOOTER:not interpreted"
   commit_with_message 'test: the argument git repository'
   create_git_repository_and_cd_in ../yet_another_git_dir
   commit_with_message 'test: the current directory git repository'
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
   override_repository_directory_for_bind_mount_with ../other_git_dir
 
   run ../src/generate.sh -r ../other_git_dir
@@ -593,8 +591,8 @@ DAMN-FOOTER:not interpreted"
   create_git_repository
   commit_with_message 'fix: a fix commit'
   cd ..
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
 
   run src/generate.sh
 
@@ -607,8 +605,8 @@ DAMN-FOOTER:not interpreted"
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the argument git repository'
   cd ..
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
   override_repository_directory_for_bind_mount_with other_git_dir
 
   run src/generate.sh -r other_git_dir
@@ -621,8 +619,8 @@ DAMN-FOOTER:not interpreted"
   commit_with_message 'test: the script location git repository'
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
 
   run ../src/generate.sh
 
@@ -636,8 +634,8 @@ DAMN-FOOTER:not interpreted"
   commit_with_message 'test: the argument git repository'
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
   override_repository_directory_for_bind_mount_with ../yet_another_git_dir
 
   run ../src/generate.sh --git-repository ../yet_another_git_dir
