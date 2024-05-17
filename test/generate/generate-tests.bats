@@ -563,3 +563,84 @@ DAMN-FOOTER:not interpreted"
 
   assert_success
 }
+
+@test "generate in docker must succeed when outside of a git repository, the current directory is a git repository, with no argument specified" {
+  create_git_repository_and_cd_in ../inner_git_dir
+  commit_with_message 'chore: a first commit'
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+
+  run ../src/generate.sh
+
+  assert_success
+}
+
+@test "generate in docker must succeed when outside of a git repository, the current directory being a git repository and an argument target a git repository. The argument takes precedence" {
+  create_git_repository_and_cd_in ../other_git_dir
+  commit_with_message 'test: the argument git repository'
+  create_git_repository_and_cd_in ../yet_another_git_dir
+  commit_with_message 'test: the current directory git repository'
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_repository_directory_for_bind_mount_with ../other_git_dir
+
+  run ../src/generate.sh -r ../other_git_dir
+
+  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+}
+
+@test "generate in docker must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
+  create_git_repository
+  commit_with_message 'fix: a fix commit'
+  cd ..
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+
+  run src/generate.sh
+
+  assert_success
+}
+
+@test "generate in docker must succeed when within a git repository, the current directory is not a git repository and there is an argument targeting a git repository. The argument takes precedence" {
+  create_git_repository
+  commit_with_message 'test: the script location git repository'
+  create_git_repository_and_cd_in ../other_git_dir
+  commit_with_message 'test: the argument git repository'
+  cd ..
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_repository_directory_for_bind_mount_with other_git_dir
+
+  run src/generate.sh -r other_git_dir
+
+  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+}
+
+@test "generate in docker must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
+  create_git_repository
+  commit_with_message 'test: the script location git repository'
+  create_git_repository_and_cd_in ../other_git_dir
+  commit_with_message 'test: the current directory git repository'
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+
+  run ../src/generate.sh
+
+  assert_pcre_match "$output" $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
+}
+
+@test "generate in docker must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
+  create_git_repository
+  commit_with_message 'test: the script location git repository'
+  create_git_repository_and_cd_in ../yet_another_git_dir
+  commit_with_message 'test: the argument git repository'
+  create_git_repository_and_cd_in ../other_git_dir
+  commit_with_message 'test: the current directory git repository'
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  override_current_directory_for_bind_mount_with "$(pwd -P)"
+  override_repository_directory_for_bind_mount_with ../yet_another_git_dir
+
+  run ../src/generate.sh --git-repository ../yet_another_git_dir
+
+  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+}
