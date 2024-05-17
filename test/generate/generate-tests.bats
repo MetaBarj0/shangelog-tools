@@ -528,15 +528,6 @@ DAMN-FOOTER:not interpreted"
   refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
 }
 
-@test "generate in docker fails with '1' if not targeting git repository" {
-  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
-  override_current_directory_for_bind_mount_with "$(pwd -P)"
-
-  run -1 generate_in_docker
-
-  assert_output "${generate_error_cannot_bind_git_repository}"
-}
-
 @test "generate in docker fails if there is pending changes in the targeted repository" {
   create_git_repository
   commit_with_message 'chore: First conventional chore commit'
@@ -548,4 +539,14 @@ DAMN-FOOTER:not interpreted"
   run -1 generate_in_docker
 
   assert_output "$generate_error_pending_changes"
+}
+
+@test "generate in docker must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
+  override_script_directory_for_bind_mount_with "${GENERATE_SCRIPT_DIR}"
+  mkdir inner_directory
+  override_current_directory_for_bind_mount_with inner_directory
+
+  run -1 generate_no_docker
+
+  assert_output "${generate_error_cannot_bind_git_repository}"
 }
