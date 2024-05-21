@@ -27,15 +27,13 @@ get_current_directory() {
 }
 
 get_repository_directory() {
-  local result
-
   if [ -z "${git_repository_directory}" ]; then
-    result="$(get_current_directory)"
+    local result="$(get_current_directory)"
   else
     if [ -z "${REPOSITORY_DIRECTORY_OVERRIDE}" ]; then
-      result="${git_repository_directory}"
+      local result="${git_repository_directory}"
     else
-      result="${REPOSITORY_DIRECTORY_OVERRIDE}"
+      local result="${REPOSITORY_DIRECTORY_OVERRIDE}"
     fi
   fi
 
@@ -184,8 +182,8 @@ is_there_any_conventional_commit() {
 list_changelog_compliant_commits_from_rev_to_tip() {
   local rev="$1"
 
-  local rev_option \
-  && [ ! -z "$rev" ] \
+  [ ! -z "$rev" ] \
+  && local rev_option \
   && rev_option="^${rev}" \
   || rev_option="$(git branch --show-current)"
 
@@ -272,12 +270,13 @@ generate_versioned_section() {
   local upper_tag="$(echo "$1" | head -n 1)"
   local lower_tag="$2"
 
-  local commits
   if [ -z "$lower_tag" ]; then
-    commits="$(list_changelog_compliant_commits_reachable_from $upper_tag)"
+    local commits="$(list_changelog_compliant_commits_reachable_from $upper_tag)"
   else
-    commits="$(list_changelog_compliant_commits_from_and_up_to $upper_tag $lower_tag)"
+    local commits="$(list_changelog_compliant_commits_from_and_up_to $upper_tag $lower_tag)"
   fi
+
+  [ -z "$commits" ] && return 0
 
   output_section "${upper_tag}" "${commits}"
 
@@ -405,14 +404,13 @@ is_it_breaking_commit_summary() {
 
 extract_footer() {
   local body="$(echo "$1" | tac)"
-  local footer
 
   while read line; do
     if [ -z "$line" ]; then
       break
     fi
 
-    footer="$footer"$'\n'"$line"
+    local footer="$footer"$'\n'"$line"
   done << EOF
 $body
 EOF

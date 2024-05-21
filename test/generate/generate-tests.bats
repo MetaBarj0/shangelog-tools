@@ -410,6 +410,48 @@ EOF
   assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
 }
 
+empty_commit_incorrect_pattern() {
+  cat << EOF
+^## \[Unreleased\]$
+
+^### feat$
+
+^- top commit ${generate_sha1_pattern}$
+
+^### chore$
+
+^- under the top commit ${generate_sha1_pattern}$
+
+^## \[v0\.2\.0\]$
+
+^### feat$
+
+^- top commit \[\]$
+
+^## \[v0\.1\.0\]$
+
+^### feat$
+
+^- top commit \[\]$
+EOF
+}
+
+@test "generate does not output a changelog with empty version containing wrong commits" {
+  create_git_repository
+  commit_with_message 'non conventional commit 1'
+  commit_with_message 'non conventional commit 2'
+  create_annotated_tag 'v0.1.0'
+  commit_with_message 'non conventional commit 3'
+  commit_with_message 'non conventional commit 4'
+  create_annotated_tag 'v0.2.0'
+  commit_with_message 'chore: under the top commit'
+  commit_with_message 'feat: top commit'
+
+  run generate_no_docker
+
+  refute assert_pcre_match "$output" "$(empty_commit_incorrect_pattern)"
+}
+
 @test "generate output a correct changelog between normal and merge commits as annotated tags" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
