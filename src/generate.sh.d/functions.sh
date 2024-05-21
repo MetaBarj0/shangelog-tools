@@ -290,7 +290,11 @@ generate_versioned_section() {
 }
 
 get_all_sorted_annotated_tags() {
-  git for-each-ref --format='%(objecttype) %(refname:short)' --sort='v:refname' | grep tag | sed 's/^tag //'
+  git for-each-ref \
+    --format='%(objecttype) %(refname:short)' \
+    --sort='v:refname' \
+  | grep tag \
+  | sed 's/^tag //'
 }
 
 get_all_semver_tags_from_newest_to_oldest() {
