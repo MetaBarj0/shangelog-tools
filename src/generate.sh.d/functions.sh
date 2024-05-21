@@ -596,7 +596,6 @@ run_container() {
     $image_id \
     /bin/ash -c \
     "$(cat << EOF
-    read -n1 -s
 /root/script_directory/generate.sh $@ --git-repository /root/repository_directory --no-docker
 EOF
     )" \
