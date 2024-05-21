@@ -1,15 +1,14 @@
 #!/bin/sh
 
-assert_pcre_match() {
-  if [ $# -ne 2 ]; then
-    echo 'assert_pcre_match must be called with 2 arguments: <value> <pattern>' >&2
+assert_pcre_match_output() {
+  if [ $# -ne 1 ]; then
+    echo 'assert_pcre_match must be called with 1 arguments: <pattern>' >&2
     exit 1
   fi
 
-  local value="$1"
-  local pattern="$2"
+  local pattern="$1"
 
-  assert echo "$value" | pcregrep -M "$pattern"
+  assert echo "${output}" | pcregrep -M "$pattern"
 }
 
 assert_line_count_equals() {

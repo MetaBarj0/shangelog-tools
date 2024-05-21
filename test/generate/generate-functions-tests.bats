@@ -83,7 +83,7 @@ teardown() {
 
   run generate_sections
 
-  assert_pcre_match "$output" "${expected_pattern}"
+  assert_pcre_match_output "${expected_pattern}"
 }
 
 @test "A repository with multiple annotated tags output as much as versioned sections" {
@@ -120,8 +120,8 @@ teardown() {
 
   run generate_sections
 
-  assert_pcre_match "$output" "${expected_v0_1_3_pattern}"
-  assert_pcre_match "$output" "${expected_v0_1_2_pattern}"
-  assert_pcre_match "$output" "${expected_v0_1_1_pattern}"
-  assert_pcre_match "$output" "${expected_v0_1_0_pattern}"
+  assert_pcre_match_output "${expected_v0_1_3_pattern}"
+  assert_pcre_match_output "${expected_v0_1_2_pattern}"
+  assert_pcre_match_output "${expected_v0_1_1_pattern}"
+  assert_pcre_match_output "${expected_v0_1_0_pattern}"
 }

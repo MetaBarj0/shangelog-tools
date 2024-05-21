@@ -80,7 +80,7 @@ teardown() {
   run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
-  assert_pcre_match "${output}" "${expected_output_pattern}"
+  assert_pcre_match_output "${expected_output_pattern}"
 }
 
 @test "generate succeeds to create several unreleased feat entries change log" {
@@ -101,7 +101,7 @@ teardown() {
   run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
-  assert_pcre_match "${output}" "${expected_output_pattern}"
+  assert_pcre_match_output "${expected_output_pattern}"
 }
 
 @test "generates handles correctly interleaved conventional commit types" {
@@ -115,14 +115,14 @@ teardown() {
   run generate_no_docker
 
   assert_output --partial "${generate_changelog_header}"
-  assert_pcre_match "$output" "^## \[Unreleased\]$
+  assert_pcre_match_output "^## \[Unreleased\]$
 
 ^### feat$
 
 ^- \(last feature\) latest fancy feature ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
 
-  assert_pcre_match "$output" "^### chore$
+  assert_pcre_match_output "^### chore$
 
 ^- \(style\) reformat, more stylish ${generate_sha1_pattern}$
 ^- \(a chore scope\) Second commit, chore one ${generate_sha1_pattern}$"
@@ -146,17 +146,17 @@ teardown() {
 
   assert_output --partial "${generate_changelog_header}"
   assert_output --partial "## [Unreleased]"
-  assert_pcre_match "$output" $'^### revert$\n\n'"^- a revert commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### test$\n\n'"^- a test commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### perf$\n\n'"^- a perf commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### refactor$\n\n'"^- a refactor commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### style$\n\n'"^- a style commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### docs$\n\n'"^- a docs commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### ci$\n\n'"^- a ci commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### chore$\n\n'"^- a chore commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### build$\n\n'"^- a build commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### feat$\n\n'"^- a feat commit ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" $'^### fix$\n\n'"^- a fix commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### revert$\n\n'"^- a revert commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n'"^- a test commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### perf$\n\n'"^- a perf commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### refactor$\n\n'"^- a refactor commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### style$\n\n'"^- a style commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### docs$\n\n'"^- a docs commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### ci$\n\n'"^- a ci commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### chore$\n\n'"^- a chore commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### build$\n\n'"^- a build commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### feat$\n\n'"^- a feat commit ${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### fix$\n\n'"^- a fix commit ${generate_sha1_pattern}$"
 }
 
 @test "generate must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
@@ -195,7 +195,7 @@ teardown() {
 
   run ../src/generate.sh -r ../other_git_dir -n
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
@@ -217,7 +217,7 @@ teardown() {
 
   run src/generate.sh -r other_git_dir -n
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
@@ -228,7 +228,7 @@ teardown() {
 
   run ../src/generate.sh -n
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
@@ -241,7 +241,7 @@ teardown() {
 
   run ../src/generate.sh --git-repository ../yet_another_git_dir --no-docker
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate must show the sha1 of each reported commit" {
@@ -250,7 +250,7 @@ teardown() {
 
   run generate_no_docker
 
-  assert_pcre_match "$output" "^### fix$
+  assert_pcre_match_output "^### fix$
 
 ^- a fix commit ${generate_sha1_pattern}$"
 }
@@ -325,7 +325,7 @@ teardown() {
   run generate_no_docker -b
 
   assert_output --partial "$generate_changelog_header"
-  assert_pcre_match "$output" "$expected_output_pattern"
+  assert_pcre_match_output "$expected_output_pattern"
 }
 
 @test "bump version create a commit containing a CHANGELOG.md file" {
@@ -363,7 +363,7 @@ bump_version() {
   run generate_no_docker
 
   assert_output --partial "$generate_changelog_header"
-  assert_pcre_match "$output" "$expected_output_pattern"
+  assert_pcre_match_output "$expected_output_pattern"
 }
 
 merge_tests_exepcted_output_pattern() {
@@ -402,7 +402,7 @@ EOF
 
   run generate_no_docker
 
-  assert_pcre_match "$output" "$(merge_tests_expected_output_pattern)"
+  assert_pcre_match_output "$(merge_tests_expected_output_pattern)"
 }
 
 @test "generate output a correct changelog between merge and normal commits as annotated tags" {
@@ -418,7 +418,7 @@ EOF
 
   run generate_no_docker
 
-  assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
+  assert_pcre_match_output "$(merge_tests_exepcted_output_pattern)"
 }
 
 empty_commit_incorrect_pattern() {
@@ -460,7 +460,7 @@ EOF
 
   run generate_no_docker
 
-  refute assert_pcre_match "$output" "$(empty_commit_incorrect_pattern)"
+  refute assert_pcre_match_output "$(empty_commit_incorrect_pattern)"
 }
 
 @test "generate output a correct changelog between normal and merge commits as annotated tags" {
@@ -476,7 +476,7 @@ EOF
 
   run generate_no_docker
 
-  assert_pcre_match "$output" "$(merge_tests_exepcted_output_pattern)"
+  assert_pcre_match_output "$(merge_tests_exepcted_output_pattern)"
 }
 
 @test "generate can recognize breaking change commit title" {
@@ -487,13 +487,13 @@ EOF
 
   run generate_no_docker
 
-  assert_pcre_match "$output" "^## \[Unreleased\]$"
-  assert_pcre_match "$output" "^### chore$"
-  assert_pcre_match "$output" "^- \(deprecation\) a breaking tidying ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" "^### fix$"
-  assert_pcre_match "$output" "^- a breaking fix ${generate_sha1_pattern}$"
-  assert_pcre_match "$output" "^### feat$"
-  assert_pcre_match "$output" "^- a new API ${generate_sha1_pattern}$"
+  assert_pcre_match_output "^## \[Unreleased\]$"
+  assert_pcre_match_output "^### chore$"
+  assert_pcre_match_output "^- \(deprecation\) a breaking tidying ${generate_sha1_pattern}$"
+  assert_pcre_match_output "^### fix$"
+  assert_pcre_match_output "^- a breaking fix ${generate_sha1_pattern}$"
+  assert_pcre_match_output "^### feat$"
+  assert_pcre_match_output "^- a new API ${generate_sha1_pattern}$"
 }
 
 @test "generate bumping version increase the patch number for all commit types but feat and any breaking commits" {
@@ -522,7 +522,7 @@ EOF
 
   run generate_no_docker --bump-version
 
-  assert_pcre_match "$output" "^## \[v0.1.10\]$"
+  assert_pcre_match_output "^## \[v0.1.10\]$"
 }
 
 @test "generate bumping version increase the minor number only for fix commit type that are not breaking" {
@@ -536,7 +536,7 @@ EOF
 
   run generate_no_docker --bump-version
 
-  assert_pcre_match "$output" "^## \[v0.2.0\]$"
+  assert_pcre_match_output "^## \[v0.2.0\]$"
 }
 
 @test "generate bumping version increase the major number only for breaking changes" {
@@ -558,7 +558,7 @@ BREAKING-CHANGE: breaking fix of the ..."
 
   run generate_no_docker --bump-version
 
-  assert_pcre_match "$output" "^## \[v3.0.0\]$"
+  assert_pcre_match_output "^## \[v3.0.0\]$"
 }
 
 @test "generate bumping version can does not change major on misplaced breaking change footer" {
@@ -577,7 +577,7 @@ DAMN-FOOTER:not interpreted"
 
   run generate_no_docker --bump-version
 
-  refute assert_pcre_match "$output" "^## \[v2.0.0\]$"
+  refute assert_pcre_match_output "^## \[v2.0.0\]$"
 }
 
 @test "generate in docker fails if there is pending changes in the targeted repository" {
@@ -637,7 +637,7 @@ DAMN-FOOTER:not interpreted"
 
   run ../src/generate.sh -r ../other_git_dir
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate in docker must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
@@ -664,7 +664,7 @@ DAMN-FOOTER:not interpreted"
 
   run src/generate.sh -r other_git_dir
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate in docker must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
@@ -677,7 +677,7 @@ DAMN-FOOTER:not interpreted"
 
   run ../src/generate.sh
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate in docker must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
@@ -693,7 +693,7 @@ DAMN-FOOTER:not interpreted"
 
   run ../src/generate.sh --git-repository ../yet_another_git_dir
 
-  assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
+  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
 
 @test "generate correctly bump version no matter the option order" {
@@ -702,6 +702,5 @@ DAMN-FOOTER:not interpreted"
 
   run generate.sh -n -b
 
-  # TODO: refactor, output can be accessed from assertion
-  assert_pcre_match "$output" "^## \[v0.1.0\]$"
+  assert_pcre_match_output "^## \[v0.1.0\]$"
 }
