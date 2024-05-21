@@ -695,3 +695,13 @@ DAMN-FOOTER:not interpreted"
 
   assert_pcre_match "$output" $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
+
+@test "generate correctly bump version no matter the option order" {
+  create_git_repository
+  commit_with_message 'feat: fancy feature'
+
+  run generate.sh -n -b
+
+  # TODO: refactor, output can be accessed from assertion
+  assert_pcre_match "$output" "^## \[v0.1.0\]$"
+}

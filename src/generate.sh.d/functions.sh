@@ -80,7 +80,6 @@ parse_arguments() {
       -n | --no-docker)
         no_docker_asked='true'
         shift
-        break
         ;;
       --)
         shift
