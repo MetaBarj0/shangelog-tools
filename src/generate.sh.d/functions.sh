@@ -340,6 +340,9 @@ Options:
       automatically depending the conventional commit type found from either
       the latest annotated SemVer compliant tag or the root of the git
       repository.
+      The created annotated tag points on a non conventional commit titled
+      'bump version' that track a 'CHANGELOG.md' file containing the changelog
+      that is alos output on stdout.
 
   -i version | --initial-version=version
 
