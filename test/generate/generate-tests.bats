@@ -328,6 +328,17 @@ teardown() {
   assert_pcre_match "$output" "$expected_output_pattern"
 }
 
+@test "bump version create a commit containing a CHANGELOG.md file" {
+  create_git_repository
+  commit_with_message 'feat: a very fancy feature'
+  bump_version
+  commit_with_message 'feat: another very fancy feature'
+
+  run generate_no_docker -b
+
+  assert_changelog_commit_at_tip
+}
+
 bump_version() {
   generate_no_docker --bump-version > /dev/null
 }

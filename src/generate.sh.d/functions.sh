@@ -390,7 +390,9 @@ is_repository_already_versionned() {
 }
 
 bump_initial_version() {
-  git tag -am 'initial version' "$initial_version"
+  git tag -am 'initial version' "${initial_version}"
+
+  echo "${initial_version}"
 }
 
 show_commit_body() {
@@ -453,8 +455,11 @@ bump_next_major() {
 
   local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
   local new_major_number="$(inc $major_number)"
+  local semver="v${new_major_number}.0.0"
 
-  git tag -am 'next version' "v${new_major_number}.0.0"
+  git tag -am 'next version' "${semver}"
+
+  echo "${semver}"
 }
 
 is_feat_section_generated() {
@@ -469,8 +474,11 @@ bump_next_minor() {
   local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
   local minor_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\2/')"
   local new_minor_number="$(inc $minor_number)"
+  local semver="v${major_number}.${new_minor_number}.0"
 
-  git tag -am 'next version' "v${major_number}.${new_minor_number}.0"
+  git tag -am 'next version' "${semver}"
+
+  echo "${semver}"
 }
 
 bump_next_patch() {
@@ -481,14 +489,20 @@ bump_next_patch() {
   local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
   local version_without_patch="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1.\2/')"
   local new_patch_number="$(inc $patch_number)"
+  local semver="v${version_without_patch}.${new_patch_number}"
 
-  git tag -am 'next version' "v${version_without_patch}.${new_patch_number}"
+  git tag -am 'next version' "${semver}"
+
+  echo "${semver}"
 }
 
 bump_next_version() {
-  bump_next_major \
-  || bump_next_minor \
-  || bump_next_patch
+  local new_version \
+  && new_version="$(bump_next_major)" \
+  || new_version="$(bump_next_minor)" \
+  || new_version="$(bump_next_patch)"
+
+  echo "${new_version}"
 }
 
 change_current_directory() {
@@ -538,21 +552,40 @@ bump_version_if_asked() {
   fi
 
   if ! is_repository_already_versionned; then
-    bump_initial_version
+    echo "$(bump_initial_version)"
 
     return $?
   fi
 
-  bump_next_version
+  echo "$(bump_next_version)"
+}
+
+re_bump_version() {
+  local version="$1"
+  local changelog="$2"
+
+  git tag -d "${version}" >/dev/null
+  echo "${changelog}" > CHANGELOG.md
+  git add CHANGELOG.md
+  git commit -m 'bump version' >/dev/null
+  git tag -am "bump version: ${version}" "${version}"
 }
 
 output_changelog() {
-  local header="${generate_changelog_header}"
-  local sections \
-  && sections="$(generate_sections)" || return $?
+  local new_version="$1"
 
-  echo "$header"
-  echo "$sections"
+  local sections \
+  && sections="$(generate_sections)" \
+  && local changelog \
+  && changelog="$(cat << EOF
+${generate_changelog_header}
+${sections}
+EOF
+  )" \
+  && [ ! -z "${new_version}" ] \
+  && re_bump_version "${new_version}" "${changelog}"
+
+  echo "${changelog}"
 }
 
 build_image() {
@@ -664,6 +697,7 @@ run_locally() {
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \
   && ensure_there_are_at_least_one_conventional_commit \
-  && bump_version_if_asked \
-  && output_changelog
+  && local new_version \
+  && new_version="$(bump_version_if_asked)" \
+  && output_changelog "${new_version}"
 }
