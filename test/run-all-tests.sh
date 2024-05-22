@@ -33,5 +33,6 @@ result=$?
 
 echo 'Cleaning up the mess...'
 docker image rm shangelog-tools-tester >/dev/null
+rm -rf "${script_dir}/test_output/"*
 
 exit $result
