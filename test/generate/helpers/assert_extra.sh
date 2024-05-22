@@ -32,3 +32,11 @@ assert_changelog_commit_at_tip() {
   && [ "${commit_summary}" = "bump version" ] \
   && [ "$(cat CHANGELOG.md)" = "${output}" ]
 }
+
+assert_same_tip_commit_local_remote() {
+  local current_branch="$(git symbolic-ref --short HEAD)"
+  local local_HEAD_sha1="$(git show -s --pretty='format:%H' ${current_branch})"
+  local remote_HEAD_sha1="$(git show -s --pretty='format:%H' origin/${current_branch})"
+
+  [ "${local_HEAD_sha1}" = "${remote_HEAD_sha1}" ]
+}

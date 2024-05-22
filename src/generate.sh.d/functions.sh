@@ -571,6 +571,9 @@ re_bump_version() {
   git add CHANGELOG.md
   git commit -m 'bump version' >/dev/null
   git tag -am "bump version: ${version}" "${version}"
+
+  git push origin >/dev/null 2>&1
+  git push origin --tags >/dev/null 2>&1
 }
 
 output_changelog() {

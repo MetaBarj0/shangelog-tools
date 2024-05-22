@@ -329,8 +329,8 @@ teardown() {
 }
 
 @test "bump version create a commit containing a CHANGELOG.md file" {
-  create_git_repository
-  commit_with_message 'feat: a very fancy feature'
+  create_git_repository_with_remote
+  commit_with_message_and_push_to_remote 'feat: a very fancy feature'
   bump_version
   commit_with_message 'feat: another very fancy feature'
 
@@ -364,6 +364,15 @@ bump_version() {
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match_output "$expected_output_pattern"
+}
+
+@test "Bumping version push the bump version commit to default remote" {
+  create_git_repository_with_remote
+  commit_with_message_and_push_to_remote 'feat: a great bugless feature'
+
+  run generate_no_docker -b
+
+  assert_same_tip_commit_local_remote
 }
 
 merge_tests_exepcted_output_pattern() {
