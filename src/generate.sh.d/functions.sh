@@ -548,7 +548,7 @@ ensure_there_are_at_least_one_conventional_commit() {
   fi
 }
 
-bump_version_if_asked() {
+pre_bump_version_if_asked() {
   if [ ! "$bump_version_asked" = 'true' ]; then
     return 0
   fi
@@ -572,14 +572,23 @@ re_bump_version() {
   git commit -m 'bump version' >/dev/null
   git tag -am "bump version: ${version}" "${version}"
 
-  git push origin >/dev/null 2>&1
-  git push origin --tags >/dev/null 2>&1
+  git push origin >/dev/null 2>&1 \
+  && git push origin --tags >/dev/null 2>&1
+}
+
+bump_version_if_asked() {
+  local new_version="$1"
+  local changelog="$2"
+
+  if [ ! -z "${new_version}" ]; then
+    re_bump_version "${new_version}" "${changelog}"
+  fi
 }
 
 output_changelog() {
-  local new_version="$1"
-
-  local sections \
+  local new_version \
+  && new_version="$(pre_bump_version_if_asked)" \
+  && local sections \
   && sections="$(generate_sections)" \
   && local changelog \
   && changelog="$(cat << EOF
@@ -587,8 +596,7 @@ ${generate_changelog_header}
 ${sections}
 EOF
   )" \
-  && [ ! -z "${new_version}" ] \
-  && re_bump_version "${new_version}" "${changelog}"
+  && bump_version_if_asked "${new_version}" "${changelog}"
 
   echo "${changelog}"
 }
@@ -702,7 +710,5 @@ run_locally() {
   && ensure_there_are_commits \
   && ensure_there_are_no_pending_changes \
   && ensure_there_are_at_least_one_conventional_commit \
-  && local new_version \
-  && new_version="$(bump_version_if_asked)" \
-  && output_changelog "${new_version}"
+  && output_changelog
 }
