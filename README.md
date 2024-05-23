@@ -55,27 +55,32 @@ Invoke the `generate.sh` script for a given repository. See the `--help` or
 Go into the `test` directory and execute the `run-all-tests.sh` scripts. You'll
 need docker for this. The test suite is also designed to be run within a CI/CD
 pipeline. It is fully automated. The exit code is 0 if all test pass or a non
-zero integer otherwise.
+zero integer otherwise. By default, all tests are run in parallel because there
+are fully independent from each other.
 
-### Debugging
+### Test runner modes
 
-Alternatively, you can pass the `-d` or `--debug` argument to the
-`run-all-tests.sh` script to disable parallel test execution and debug a
-specific test using the `pause_test` in any test case, should you need to do
-it.
-The test suite run into a docker container that is automatically deleted
-when the test suite ends its execution. `pause_test` allow a test to be paused
-(just like a breakpoint) thus, allowing the underlying container to live while
-the test is paused. Just run a `bash` in this container, `cd` into the test
-directory (given by the `pause_test` function) and start debug at your heart
-content.
+You can pass an additional argument to the `run-all-tests.sh` script to control
+its behavior.
+
+#### the `-d` or `--debug` option
+
+This option forces each test to be run serially. It's especially useful when
+contributing or debugging a test suite because it allows each test to be paused
+thanks to the `pause_test` function. Thus you can go straight into the docker
+test container, cd into the directory that is reported in the console by the
+`pause_test` function and start spelunking.
 Note that you cannot pass both `-d` and `-w` at the same time. Those arguments
 are mutually exclusive.
 
-### Watching
+#### the '-w' or `--watch` option
 
-You could also pass the `-w` or `--watch` argument to the `run-all-tests.sh`
-script to trigger test suites execution after each file execution.
+This option allow test suites to be run each time a relevant file is modified.
+It's very useful while contributing and greatly add to your productivity.
+Coupled with the ability of bats to [focus on specific
+tests](https://bats-core.readthedocs.io/en/stable/writing-tests.html#special-tags)
+it's a real game changer. I suggest you to mainly use this option while
+developing.
 Note that you cannot pass both `-w` and `-d` at the same time. Those arguments
 are mutually exclusive.
 
@@ -99,4 +104,4 @@ everywhere. Use the `--help` option to get usage information.
 As you wish, it's not mandatory. You can use the full feature set of these
 tools directly in this repository. Packaging tools maybe an interesting option
 if you want them system wide. Keep in mind however you'll have to manually
-handle any update of them.
+handle any update of them as you'll lose the git repository.
