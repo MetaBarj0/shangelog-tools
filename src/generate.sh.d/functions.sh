@@ -661,6 +661,21 @@ remove_image() {
 }
 
 # specific substitute to getopt that is not the same on all platforms
+# I need to evaluate this option to know if I have to show the help at once
+# before getting into a container.
+show_help_if_required() {
+  while [ ! -z "$1" ]; do
+    if [ "$1" = '-h' ] || [ "$1" = '--help' ];then
+      show_help
+      
+      exit $?
+    fi
+
+    shift
+  done
+}
+
+# specific substitute to getopt that is not the same on all platforms
 # I need to evaluate this option to know if I have to run a container
 is_no_docker_option_missing() {
   while [ ! -z "$1" ]; do
@@ -692,7 +707,8 @@ parse_git_repository_option() {
 }
 
 run_in_container() {
-  is_no_docker_option_missing "$@" \
+  show_help_if_required "$@" \
+  && is_no_docker_option_missing "$@" \
   && parse_git_repository_option "$@" \
   && local image_id \
   && image_id=$(build_image) \
