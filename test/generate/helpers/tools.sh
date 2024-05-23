@@ -62,3 +62,7 @@ override_repository_directory_for_bind_mount_with() {
 
   export REPOSITORY_DIRECTORY_OVERRIDE="${repository_directory}"
 }
+
+bump_version() {
+  generate_no_docker --bump-version > /dev/null
+}

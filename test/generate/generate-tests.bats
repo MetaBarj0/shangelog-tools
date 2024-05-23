@@ -12,6 +12,7 @@ setup() {
   load 'helpers/assert_extra.sh'
   load 'helpers/patterns.sh'
   load 'helpers/tools.sh'
+  load 'helpers/expected.sh'
 
   cp -r src "$BATS_TEST_TMPDIR"
   cd "$BATS_TEST_TMPDIR/src"
@@ -328,7 +329,7 @@ teardown() {
   assert_pcre_match_output "$expected_output_pattern"
 }
 
-@test "bump version create a commit containing a CHANGELOG.md file" {
+@test "bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
   create_git_repository_with_remote
   commit_with_message_and_push_to_remote 'feat: a very fancy feature'
   bump_version
@@ -337,10 +338,7 @@ teardown() {
   run generate_no_docker -b
 
   assert_changelog_commit_at_tip
-}
-
-bump_version() {
-  generate_no_docker --bump-version > /dev/null
+  assert_same_tip_commit_local_remote
 }
 
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
@@ -364,35 +362,6 @@ bump_version() {
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match_output "$expected_output_pattern"
-}
-
-@test "Bumping version push the bump version commit to default remote" {
-  create_git_repository_with_remote
-  commit_with_message_and_push_to_remote 'feat: a great bugless feature'
-
-  run generate_no_docker -b
-
-  assert_same_tip_commit_local_remote
-}
-
-merge_tests_exepcted_output_pattern() {
-  cat << EOF
-^## \[v0\.2\.0\]$
-
-^### fix$
-
-^- another urgent fix ${generate_sha1_pattern}$
-
-^## \[v0\.1\.0\]$
-
-^### fix$
-
-^- urgent fix ${generate_sha1_pattern}$
-
-^### feat$
-
-^- a very fancy feature ${generate_sha1_pattern}$
-EOF
 }
 
 @test "generate output a correct changelog between 2 merge commits as annotated tags" {
@@ -428,32 +397,6 @@ EOF
   run generate_no_docker
 
   assert_pcre_match_output "$(merge_tests_exepcted_output_pattern)"
-}
-
-empty_commit_incorrect_pattern() {
-  cat << EOF
-^## \[Unreleased\]$
-
-^### feat$
-
-^- top commit ${generate_sha1_pattern}$
-
-^### chore$
-
-^- under the top commit ${generate_sha1_pattern}$
-
-^## \[v0\.2\.0\]$
-
-^### feat$
-
-^- top commit \[\]$
-
-^## \[v0\.1\.0\]$
-
-^### feat$
-
-^- top commit \[\]$
-EOF
 }
 
 @test "generate does not output a changelog with empty version containing wrong commits" {

@@ -643,10 +643,6 @@ run_container() {
     -v "$(get_current_directory)":/root/current_directory \
     -v "$(get_script_directory)":/root/script_directory \
     -v "$(get_repository_directory)":/root/repository_directory \
-    -e GIT_AUTHOR_NAME="$(git config user.name)" \
-    -e GIT_COMMITTER_NAME="$(git config user.name)" \
-    -e GIT_AUTHOR_EMAIL="$(git config user.email)" \
-    -e GIT_COMMITTER_EMAIL="$(git config user.email)" \
     $image_id \
     /bin/ash -c \
     "$(cat << EOF
