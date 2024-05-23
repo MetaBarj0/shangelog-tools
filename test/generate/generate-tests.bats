@@ -341,6 +341,24 @@ teardown() {
   assert_same_tip_commit_local_remote
 }
 
+# TODO: fails because of remote is a local bare repository on the filesystem.
+#       In docker, it does not exists so it fails. Need to refactor the remote
+#       stuff to use ssh and local host
+@test "generate in docker bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
+  skip 'refactor remote push implementation'
+  create_git_repository_with_remote
+  commit_with_message_and_push_to_remote 'feat: a very fancy feature'
+  bump_version
+  commit_with_message 'feat: another very fancy feature'
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
+
+  run generate_in_docker -b
+
+  assert_changelog_commit_at_tip
+  assert_same_tip_commit_local_remote
+}
+
 @test "generate output a changelog with both a versionned and an unreleased section after version bump" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
