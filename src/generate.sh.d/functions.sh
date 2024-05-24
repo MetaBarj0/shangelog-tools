@@ -667,7 +667,7 @@ show_help_if_required() {
   while [ ! -z "$1" ]; do
     if [ "$1" = '-h' ] || [ "$1" = '--help' ];then
       show_help
-      
+
       exit $?
     fi
 
