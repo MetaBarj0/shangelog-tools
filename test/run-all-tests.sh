@@ -8,18 +8,53 @@ get_script_dir() {
   cd - 2>&1 >/dev/null
 }
 
-prepare_test_environment() {
-  echo 'preparing test environment...'
-
+clone_bats() {
   cd "$(get_script_dir)/.." 2>&1 >/dev/null
   git submodule --quiet update --init --recursive
   cd - 2>&1 >/dev/null
+}
 
+build_tester_image() {
   docker build \
     -q \
     -t shangelog-tools-tester \
     "$(get_script_dir)/docker.d" \
+    -f "$(get_script_dir)/docker.d/tester.Dockerfile" \
     >/dev/null
+}
+
+build_remote_git_repository_server_image() {
+  docker build \
+    -q \
+    -t shangelog-tools-remote-git-repository-server \
+    "$(get_script_dir)/docker.d" \
+    -f "$(get_script_dir)/docker.d/remote-git-repository-server.Dockerfile" \
+    >/dev/null
+}
+
+start_remote_git_repository_server() {
+  # TODO: remove -it flags as soon as it works
+  docker run \
+    --init --rm -d -it \
+    --name shangelog-tools-remote-git-repository-server \
+    --network ringover-shangelog-tools \
+    -p 22:22/tcp \
+    shangelog-tools-remote-git-repository-server \
+    >/dev/null
+}
+
+create_container_network() {
+  docker network create ringover-shangelog-tools >/dev/null
+}
+
+prepare_test_environment() {
+  echo 'preparing test environment...'
+
+  clone_bats \
+  && build_tester_image \
+  && build_remote_git_repository_server_image \
+  && create_container_network \
+  && start_remote_git_repository_server
 }
 
 run_test_suites() {
@@ -29,6 +64,7 @@ run_test_suites() {
   # for explanation about $BATS_TMPDIR and /tmp
   docker run \
     --init --rm -it \
+    --network ringover-shangelog-tools \
     -e TMPDIR=/tmp \
     -e HOST_TEST_OUTPUT_DIR="$(get_script_dir)/test_output" \
     -v "$(get_script_dir)/../":/root/ringover-shangelog-tools/:ro \
@@ -40,7 +76,10 @@ run_test_suites() {
 cleanup() {
   echo 'cleaning up the mess...'
 
+  docker stop shangelog-tools-remote-git-repository-server >/dev/null
+  docker network rm ringover-shangelog-tools >/dev/null
   docker image rm shangelog-tools-tester >/dev/null
+  docker image rm shangelog-tools-remote-git-repository-server >/dev/null
   rm -rf "$(get_script_dir)/test_output/"*
 }
 

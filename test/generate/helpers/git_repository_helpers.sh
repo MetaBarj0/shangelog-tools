@@ -1,15 +1,31 @@
 #!/bin/sh
 
-create_git_repository() {
-  git init > /dev/null 2>&1
-
+setup_git_test_user_info_for_repository() {
   git config user.email "bats@test.suite"
   git config user.name "bats"
 }
 
-create_git_repository_with_remote() {
-  create_git_repository
-  setup_repository_remote
+create_git_repository() {
+  git init > /dev/null 2>&1
+
+  setup_git_test_user_info_for_repository
+}
+
+create_remote_git_repository_and_clone_it() {
+  local repository_name=remote
+  local repository_path=user/"${repository_name}".git
+
+  docker exec \
+    -u git \
+    shangelog-tools-remote-git-repository-server \
+    ./create-bare-repository-in.sh "${repository_path}"
+
+  git clone \
+    git@shangelog-tools-remote-git-repository-server:"${repository_path}"
+
+  cd "${repository_name}"
+
+  setup_git_test_user_info_for_repository
 }
 
 commit_with_message() {
@@ -53,20 +69,6 @@ merge_no_ff() {
   local merge_branch="$1"
 
   git merge --no-ff --commit --no-edit "$merge_branch"
-}
-
-setup_repository_remote() {
-  local remote_dir="${BATS_TEST_TMPDIR}/remote"
-
-  mkdir "${remote_dir}"
-
-  cd "${remote_dir}" >/dev/null 2>&1
-
-  git init --bare >/dev/null 2>&1
-
-  cd - >/dev/null 2>&1
-
-  git remote add origin "${remote_dir}" >/dev/null 2>&1
 }
 
 push_to_remote() {

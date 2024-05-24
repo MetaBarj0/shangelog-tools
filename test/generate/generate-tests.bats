@@ -330,7 +330,7 @@ teardown() {
 }
 
 @test "bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
-  create_git_repository_with_remote
+  create_remote_git_repository_and_clone_it
   commit_with_message_and_push_to_remote 'feat: a very fancy feature'
   bump_version
   commit_with_message 'feat: another very fancy feature'
@@ -345,7 +345,7 @@ teardown() {
 #       In docker, it does not exists so it fails. Need to refactor the remote
 #       stuff to use ssh and local host
 @test "generate in docker bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
-  skip 'refactor remote push implementation'
+skip
   create_git_repository_with_remote
   commit_with_message_and_push_to_remote 'feat: a very fancy feature'
   bump_version

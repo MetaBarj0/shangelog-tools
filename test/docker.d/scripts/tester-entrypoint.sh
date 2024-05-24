@@ -93,9 +93,60 @@ EOF
   done
 }
 
-main() {
-  parse_arguments "$@"
+amend_sshd_config() {
+  cat >>/etc/ssh/sshd_config << EOF
+PasswordAuthentication no
+PermitRootLogin yes
+EOF
+}
 
+setup_server() {
+  amend_sshd_config \
+  && generate_server_keys
+}
+
+start_server() {
+  $(which sshd)
+}
+
+generate_client_keys() {
+  ssh-keygen -t rsa -q -N '' -f /root/.ssh/id_rsa
+}
+
+scan_host_keys() {
+  while ! ssh-keyscan \
+    -t rsa \
+    shangelog-tools-remote-git-repository-server \
+    > /root/.ssh/known_hosts \
+    2>/dev/null; do
+    sleep 1
+  done
+}
+
+authorize_public_key_on_server() {
+  docker cp \
+    /root/.ssh/id_rsa.pub \
+    shangelog-tools-remote-git-repository-server:/home/git/.ssh/authorized_keys \
+    >/dev/null
+
+  docker exec \
+    shangelog-tools-remote-git-repository-server \
+    chown git:git /home/git/.ssh/authorized_keys \
+    >/dev/null
+}
+
+setup_ssh_client() {
+  mkdir /root/.ssh \
+  && generate_client_keys \
+  && scan_host_keys \
+  && authorize_public_key_on_server
+}
+
+generate_server_keys() {
+  ssh-keygen -A >/dev/null
+}
+
+run() {
   if [ "$argument_debug" = 'false' ]; then
     if [ "$argument_watch" = 'true' ]; then
       watch_and_run_test_suites_parallel
@@ -109,6 +160,12 @@ main() {
   local result=$?
 
   return $result
+}
+
+main() {
+  parse_arguments "$@" \
+  && setup_ssh_client \
+  && run
 }
 
 main "$@"
