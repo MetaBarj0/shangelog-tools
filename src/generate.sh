@@ -15,8 +15,11 @@ load_functions() {
 }
 
 run() {
-  run_in_container "$@" \
-  || run_locally "$@"
+  if is_no_docker_option_missing "$@"; then
+    run_in_container "$@"
+  else
+    run_locally "$@"
+  fi
 }
 
 main() {

@@ -93,22 +93,6 @@ EOF
   done
 }
 
-amend_sshd_config() {
-  cat >>/etc/ssh/sshd_config << EOF
-PasswordAuthentication no
-PermitRootLogin yes
-EOF
-}
-
-setup_server() {
-  amend_sshd_config \
-  && generate_server_keys
-}
-
-start_server() {
-  $(which sshd)
-}
-
 generate_client_keys() {
   ssh-keygen -t rsa -q -N '' -f /root/.ssh/id_rsa
 }
@@ -140,10 +124,6 @@ setup_ssh_client() {
   && generate_client_keys \
   && scan_host_keys \
   && authorize_public_key_on_server
-}
-
-generate_server_keys() {
-  ssh-keygen -A >/dev/null
 }
 
 run() {

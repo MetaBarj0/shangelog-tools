@@ -562,6 +562,12 @@ pre_bump_version_if_asked() {
   echo "$(bump_next_version)"
 }
 
+repository_has_remotes() {
+  local remotes_reported="$(git remote -v)"
+
+  [ ! -z "${remotes_reported}" ]
+}
+
 re_bump_version() {
   local version="$1"
   local changelog="$2"
@@ -572,8 +578,10 @@ re_bump_version() {
   git commit -m 'bump version' >/dev/null
   git tag -am "bump version: ${version}" "${version}"
 
-  git push origin >/dev/null 2>&1 \
-  && git push origin --tags >/dev/null 2>&1
+  if repository_has_remotes; then
+    git push origin >/dev/null 2>&1 \
+    && git push origin --tags >/dev/null 2>&1
+  fi
 }
 
 bump_version_if_asked() {
@@ -596,9 +604,8 @@ ${generate_changelog_header}
 ${sections}
 EOF
   )" \
-  && bump_version_if_asked "${new_version}" "${changelog}"
-
-  echo "${changelog}"
+  && bump_version_if_asked "${new_version}" "${changelog}" \
+  && echo "${changelog}"
 }
 
 build_image() {
@@ -644,14 +651,18 @@ run_container() {
     -v "$(get_script_directory)":/root/script_directory \
     -v "$(get_repository_directory)":/root/repository_directory \
     $image_id \
-    /bin/ash -c \
+    /bin/ash \
+    '-c' \
     "$(cat << EOF
-/root/script_directory/generate.sh $@ --git-repository /root/repository_directory --no-docker
+/root/script_directory/generate.sh \
+  $@ \
+  --git-repository /root/repository_directory \
+  --no-docker
 EOF
     )" \
-  ;  local exit_code=$? \
+  ; local exit_code=$? \
   && remove_image $image_id \
-  && exit $exit_code
+  && return $exit_code
 }
 
 remove_image() {
