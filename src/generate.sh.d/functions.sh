@@ -618,7 +618,7 @@ RUN \
 FROM base as dependencies
 RUN \
   --mount=type=cache,target=/var/cache/apk \
-  apk add bash git pcre-tools
+  apk add bash git pcre-tools openssh-client
 
 FROM dependencies as prepare_volume
 WORKDIR /root

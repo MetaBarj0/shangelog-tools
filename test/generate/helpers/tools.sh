@@ -64,5 +64,6 @@ override_repository_directory_for_bind_mount_with() {
 }
 
 bump_version() {
+  # TODO: replace with generate_in_docker
   generate_no_docker --bump-version > /dev/null
 }
