@@ -640,6 +640,23 @@ EOF
   echo $image_id
 }
 
+craft_container_commands_with() {
+  cat << EOF
+mkdir /root/.ssh
+
+ssh-keyscan \
+  -t rsa \
+  localhost \
+  > /root/.ssh/known_hosts \
+  2>/dev/null
+
+/root/script_directory/generate.sh \
+  $@ \
+  --git-repository /root/repository_directory \
+  --no-docker
+EOF
+}
+
 run_container() {
   local image_id=$1
 
@@ -647,19 +664,14 @@ run_container() {
 
   docker run \
     --init --rm \
+    --network=host \
     -v "$(get_current_directory)":/root/current_directory \
     -v "$(get_script_directory)":/root/script_directory \
     -v "$(get_repository_directory)":/root/repository_directory \
     $image_id \
     /bin/ash \
     '-c' \
-    "$(cat << EOF
-/root/script_directory/generate.sh \
-  $@ \
-  --git-repository /root/repository_directory \
-  --no-docker
-EOF
-    )" \
+    "$(craft_container_commands_with "$@")" \
   ; local exit_code=$? \
   && remove_image $image_id \
   && return $exit_code

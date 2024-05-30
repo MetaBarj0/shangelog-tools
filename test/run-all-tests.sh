@@ -71,7 +71,6 @@ cleanup() {
   echo 'cleaning up the mess...'
 
   docker stop shangelog-tools-remote-git-repository-server >/dev/null
-  docker network rm ringover-shangelog-tools >/dev/null
   docker image rm shangelog-tools-tester >/dev/null
   docker image rm shangelog-tools-remote-git-repository-server >/dev/null
   rm -rf "$(get_script_dir)/test_output/"*
