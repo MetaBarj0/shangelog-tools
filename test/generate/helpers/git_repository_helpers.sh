@@ -21,7 +21,7 @@ create_remote_git_repository_and_clone_it() {
     ./create-bare-repository-in.sh "${repository_path}"
 
   git clone \
-    git@shangelog-tools-remote-git-repository-server:"${repository_path}" \
+    git@localhost:"${repository_path}" \
     >/dev/null 2>&1
 
   cd "${repository_name}"

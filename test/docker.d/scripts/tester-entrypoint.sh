@@ -100,7 +100,7 @@ generate_client_keys() {
 scan_host_keys() {
   while ! ssh-keyscan \
     -t rsa \
-    shangelog-tools-remote-git-repository-server \
+    localhost \
     > /root/.ssh/known_hosts \
     2>/dev/null; do
     sleep 1

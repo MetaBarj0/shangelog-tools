@@ -37,14 +37,9 @@ start_remote_git_repository_server() {
   docker run \
     --init --rm -d -it \
     --name shangelog-tools-remote-git-repository-server \
-    --network ringover-shangelog-tools \
-    -p 22:22/tcp \
+    --network=host \
     shangelog-tools-remote-git-repository-server \
     >/dev/null
-}
-
-create_container_network() {
-  docker network create ringover-shangelog-tools >/dev/null
 }
 
 prepare_test_environment() {
@@ -53,7 +48,6 @@ prepare_test_environment() {
   clone_bats \
   && build_tester_image \
   && build_remote_git_repository_server_image \
-  && create_container_network \
   && start_remote_git_repository_server
 }
 
@@ -64,7 +58,7 @@ run_test_suites() {
   # for explanation about $BATS_TMPDIR and /tmp
   docker run \
     --init --rm -it \
-    --network ringover-shangelog-tools \
+    --network=host \
     -e TMPDIR=/tmp \
     -e HOST_TEST_OUTPUT_DIR="$(get_script_dir)/test_output" \
     -v "$(get_script_dir)/../":/root/ringover-shangelog-tools/:ro \
