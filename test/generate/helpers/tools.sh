@@ -36,7 +36,7 @@ override_test_directory_bind_mount_with() {
   local current_working_directory="$1"
 
   echo "$current_working_directory" \
-  | sed -E "s%${BATS_TMPDIR}%${HOST_TEST_OUTPUT_DIR}%"
+  | sed -E "s%${BATS_TMPDIR}%${HOST_TESTER_OUTPUT_DIR}%"
 }
 
 override_script_directory_for_bind_mount() {
@@ -49,6 +49,14 @@ override_current_directory_for_bind_mount() {
   local current_directory="$(override_test_directory_bind_mount_with "$(pwd -P)")"
 
   export CURRENT_DIRECTORY_OVERRIDE="${current_directory}"
+}
+
+override_ssh_secret_key_path_for_bind_mount() {
+  export SSH_SECRET_KEY_PATH_OVERRIDE="${HOST_TESTER_SSH_DIR}/id_rsa"
+}
+
+override_ssh_public_key_path_for_bind_mount() {
+  export SSH_PUBLIC_KEY_PATH_OVERRIDE="${HOST_TESTER_SSH_DIR}/id_rsa.pub"
 }
 
 override_repository_directory_for_bind_mount_with() {

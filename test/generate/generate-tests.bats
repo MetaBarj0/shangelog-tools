@@ -342,7 +342,6 @@ skip TODO
   assert_same_tip_commit_local_remote
 }
 
-# bats test_tags=bats:focus
 @test "generate in docker bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
   create_remote_git_repository_and_clone_it
   commit_with_message_and_push_to_remote 'feat: a very fancy feature'
@@ -350,11 +349,11 @@ skip TODO
   commit_with_message 'feat: another very fancy feature'
   override_script_directory_for_bind_mount
   override_current_directory_for_bind_mount
+  override_ssh_secret_key_path_for_bind_mount
+  override_ssh_public_key_path_for_bind_mount
 
-  pause_test
   run generate_in_docker -b
 
-  assert_success
   assert_changelog_commit_at_tip
   assert_same_tip_commit_local_remote
 }

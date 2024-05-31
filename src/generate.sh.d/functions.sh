@@ -40,6 +40,28 @@ get_repository_directory() {
   echo "$result"
 }
 
+get_ssh_secret_key_path() {
+  if [ -z "${SSH_SECRET_KEY_PATH_OVERRIDE}" ]; then
+    # TODO: check outside of test env, add option to customize it
+    cd ~/.ssh >/dev/null 2>&1
+    echo "$(pwd -P)/id_rsa"
+    cd - >/dev/null 2>&1
+  else
+    echo "${SSH_SECRET_KEY_PATH_OVERRIDE}"
+  fi
+}
+
+get_ssh_public_key_path() {
+  if [ -z "${SSH_PUBLIC_KEY_PATH_OVERRIDE}" ]; then
+    # TODO: check outside of test env, add option to customize it
+    cd ~/.ssh >/dev/null 2>&1
+    echo "$(pwd -P)/id_rsa.pub"
+    cd - >/dev/null 2>&1
+  else
+    echo "${SSH_PUBLIC_KEY_PATH_OVERRIDE}"
+  fi
+}
+
 load_strings() {
   local script_dir="$1"
 
@@ -642,16 +664,11 @@ EOF
 
 craft_container_commands_with() {
   cat << EOF
-mkdir /root/.ssh
-
 ssh-keyscan \
   -t rsa \
   localhost \
   > /root/.ssh/known_hosts \
   2>/dev/null
-
-# TODO: remove below
-read -n1 -s
 
 /root/script_directory/generate.sh \
   $@ \
@@ -666,11 +683,13 @@ run_container() {
   shift
 
   docker run \
-    --init --rm -it \
+    --init --rm \
     --network=host \
     -v "$(get_current_directory)":/root/current_directory \
     -v "$(get_script_directory)":/root/script_directory \
     -v "$(get_repository_directory)":/root/repository_directory \
+    -v "$(get_ssh_secret_key_path)":/root/.ssh/id_rsa:ro \
+    -v "$(get_ssh_public_key_path)":/root/.ssh/id_rsa.pub:ro \
     $image_id \
     /bin/ash \
     '-c' \

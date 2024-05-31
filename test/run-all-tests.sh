@@ -60,7 +60,8 @@ run_test_suites() {
     --init --rm -it \
     --network=host \
     -e TMPDIR=/tmp \
-    -e HOST_TEST_OUTPUT_DIR="$(get_script_dir)/tester_bind_mount/output" \
+    -e HOST_TESTER_OUTPUT_DIR="$(get_script_dir)/tester_bind_mount/output" \
+    -e HOST_TESTER_SSH_DIR="$(get_script_dir)/tester_bind_mount/.ssh" \
     -v "$(get_script_dir)/../":/root/ringover-shangelog-tools/:ro \
     -v /var/run/docker.sock:/var/run/docker.sock:ro \
     -v "$(get_script_dir)/tester_bind_mount/output":/tmp \
@@ -74,7 +75,7 @@ cleanup() {
   docker stop shangelog-tools-remote-git-repository-server >/dev/null
   docker image rm shangelog-tools-tester >/dev/null
   docker image rm shangelog-tools-remote-git-repository-server >/dev/null
-  git clean -dfx "$(get_script_dir)/tester_bind_mount"
+  git clean -dfx "$(get_script_dir)/tester_bind_mount" >/dev/null
 }
 
 main() {
