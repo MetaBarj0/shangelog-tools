@@ -1,3 +1,10 @@
-test_output/**
+tester_bind_mount/**
+!tester_bind_mount/.gitkeep
 
-!test_output/.gitkeep
+!tester_bind_mount/.ssh
+tester_bind_mount/.ssh/**
+!tester_bind_mount/.ssh/.gitkeep
+
+!tester_bind_mount/output
+tester_bind_mount/output/**
+!tester_bind_mount/output/.gitkeep

@@ -650,6 +650,9 @@ ssh-keyscan \
   > /root/.ssh/known_hosts \
   2>/dev/null
 
+# TODO: remove below
+read -n1 -s
+
 /root/script_directory/generate.sh \
   $@ \
   --git-repository /root/repository_directory \
@@ -663,7 +666,7 @@ run_container() {
   shift
 
   docker run \
-    --init --rm \
+    --init --rm -it \
     --network=host \
     -v "$(get_current_directory)":/root/current_directory \
     -v "$(get_script_directory)":/root/script_directory \

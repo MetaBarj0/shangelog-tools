@@ -120,8 +120,7 @@ authorize_public_key_on_server() {
 }
 
 setup_ssh_client() {
-  mkdir /root/.ssh \
-  && generate_client_keys \
+  generate_client_keys \
   && scan_host_keys \
   && authorize_public_key_on_server
 }
