@@ -24,11 +24,12 @@ print_test() {
   echo "<<<$@>>>" >&3
 }
 
-generate_no_docker() {
-  generate.sh "$@" --no-docker
-}
-
 generate_in_docker() {
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
+  override_ssh_secret_key_path_for_bind_mount
+  override_ssh_public_key_path_for_bind_mount
+
   generate.sh "$@"
 }
 
@@ -72,6 +73,5 @@ override_repository_directory_for_bind_mount_with() {
 }
 
 bump_version() {
-  # TODO: replace with generate_in_docker
-  generate_no_docker --bump-version > /dev/null
+  generate_in_docker --bump-version > /dev/null
 }

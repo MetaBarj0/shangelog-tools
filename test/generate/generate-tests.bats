@@ -27,7 +27,7 @@ teardown() {
 }
 
 @test "generate fails with '1' if not targeting git repository" {
-  run -1 generate_no_docker
+  run -1 generate_in_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
@@ -35,7 +35,7 @@ teardown() {
 @test "generate fails if the git repository does not have any commit" {
   create_git_repository
 
-  run -1 generate_no_docker
+  run -1 generate_in_docker
 
   assert_output "${generate_error_no_commits}"
 }
@@ -46,7 +46,7 @@ teardown() {
   touch pending.txt
   git add pending.txt
 
-  run -1 generate_no_docker
+  run -1 generate_in_docker
 
   assert_output "$generate_error_pending_changes"
 }
@@ -58,7 +58,7 @@ teardown() {
   commit_with_message 'chore:       too much spaces'
   commit_with_message 'chore(scope):       too much spaces'
 
-  run -1 generate_no_docker
+  run -1 generate_in_docker
 
   assert_output "$generate_error_no_conventional_commit_found"
 }
@@ -78,7 +78,7 @@ teardown() {
 ^- Second commit ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_pcre_match_output "${expected_output_pattern}"
@@ -99,7 +99,7 @@ teardown() {
 ^- \(a scope\) Second commit ${generate_sha1_pattern}$
 ^- Initial commit ${generate_sha1_pattern}$"
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_pcre_match_output "${expected_output_pattern}"
@@ -113,7 +113,7 @@ teardown() {
   commit_with_message 'feat(last feature): latest fancy feature'
   commit_with_message 'chore(style): reformat, more stylish'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_pcre_match_output "^## \[Unreleased\]$
@@ -143,7 +143,7 @@ teardown() {
   commit_with_message 'test: a test commit'
   commit_with_message 'revert: a revert commit'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_output --partial "${generate_changelog_header}"
   assert_output --partial "## [Unreleased]"
@@ -164,7 +164,7 @@ teardown() {
   mkdir inner_directory
   cd inner_directory
 
-  run -1 generate_no_docker
+  run -1 generate_in_docker
 
   assert_output "${generate_error_cannot_bind_git_repository}"
 }
@@ -173,8 +173,9 @@ teardown() {
   create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
   cd -
+  override_repository_directory_for_bind_mount_with ../inner_git_dir
 
-  run generate_no_docker -r ../inner_git_dir
+  run generate_in_docker -r ../inner_git_dir
 
   assert_success
 }
@@ -183,7 +184,7 @@ teardown() {
   create_git_repository_and_cd_in ../inner_git_dir
   commit_with_message 'chore: a first commit'
 
-  run ../src/generate.sh -n
+  run generate_in_docker
 
   assert_success
 }
@@ -193,8 +194,9 @@ teardown() {
   commit_with_message 'test: the argument git repository'
   create_git_repository_and_cd_in ../yet_another_git_dir
   commit_with_message 'test: the current directory git repository'
+  override_repository_directory_for_bind_mount_with ../other_git_dir
 
-  run ../src/generate.sh -r ../other_git_dir -n
+  run generate_in_docker -r ../other_git_dir
 
   assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
@@ -204,7 +206,7 @@ teardown() {
   commit_with_message 'fix: a fix commit'
   cd ..
 
-  run src/generate.sh -n
+  run generate_in_docker
 
   assert_success
 }
@@ -215,8 +217,9 @@ teardown() {
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the argument git repository'
   cd ..
+  override_repository_directory_for_bind_mount_with other_git_dir
 
-  run src/generate.sh -r other_git_dir -n
+  run generate_in_docker -r other_git_dir
 
   assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
@@ -227,20 +230,23 @@ teardown() {
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
 
-  run ../src/generate.sh -n
+  run generate_in_docker
 
   assert_pcre_match_output $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
 }
 
-@test "generate must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
+@test "generate in docker must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
   create_git_repository
   commit_with_message 'test: the script location git repository'
   create_git_repository_and_cd_in ../yet_another_git_dir
   commit_with_message 'test: the argument git repository'
   create_git_repository_and_cd_in ../other_git_dir
   commit_with_message 'test: the current directory git repository'
+  override_script_directory_for_bind_mount
+  override_current_directory_for_bind_mount
+  override_repository_directory_for_bind_mount_with ../yet_another_git_dir
 
-  run ../src/generate.sh --git-repository ../yet_another_git_dir --no-docker
+  run ../src/generate.sh --git-repository ../yet_another_git_dir
 
   assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
 }
@@ -249,7 +255,7 @@ teardown() {
   create_git_repository
   commit_with_message 'fix: a fix commit'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_pcre_match_output "^### fix$
 
@@ -260,7 +266,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run generate_no_docker --bump-version
+  run generate_in_docker --bump-version
 
   assert_latest_annotated_tag_equals 'v0.1.0'
 }
@@ -269,7 +275,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run generate_no_docker
+  run generate_in_docker
 
   refute assert_latest_annotated_tag_equals 'v0.1.0'
 }
@@ -278,7 +284,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run generate_no_docker --bump-version --initial-version=v5.0.0
+  run generate_in_docker --bump-version --initial-version=v5.0.0
 
   assert_latest_annotated_tag_equals 'v5.0.0'
 }
@@ -286,9 +292,9 @@ teardown() {
 @test "bumping the same initial version on an already version-bumped repository has no effect" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
-  generate_no_docker --bump-version
+  generate_in_docker --bump-version
 
-  run generate_no_docker --bump-version
+  run generate_in_docker --bump-version
 
   assert_success
   assert_latest_annotated_tag_equals 'v0.1.0'
@@ -297,9 +303,9 @@ teardown() {
 @test "bumping version several time with different initial version has no effect after the first bump" {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
-  generate_no_docker --bump-version
+  generate_in_docker --bump-version
 
-  run generate_no_docker --bump-version --initial-version=v1.0.0
+  run generate_in_docker --bump-version --initial-version=v1.0.0
 
   assert_success
   assert_latest_annotated_tag_equals 'v0.1.0'
@@ -309,7 +315,7 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run -1 generate_no_docker --bump-version --initial-version=wip_non_semver
+  run -1 generate_in_docker --bump-version --initial-version=wip_non_semver
 
   assert_output "${generate_error_bump_version_not_semver}"
 }
@@ -323,22 +329,10 @@ teardown() {
 
 ^- a very fancy feature ${generate_sha1_pattern}$"
 
-  run generate_no_docker -b
+  run generate_in_docker -b
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match_output "$expected_output_pattern"
-}
-
-@test "bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
-  create_remote_git_repository_and_clone_it
-  commit_with_message_and_push_to_remote 'feat: a very fancy feature'
-  bump_version
-  commit_with_message 'feat: another very fancy feature'
-
-  run generate_no_docker -b
-
-  assert_changelog_commit_at_tip
-  assert_same_tip_commit_local_remote
 }
 
 @test "generate in docker bump version create a commit containing a CHANGELOG.md file both in local and in remote" {
@@ -346,10 +340,6 @@ teardown() {
   commit_with_message_and_push_to_remote 'feat: a very fancy feature'
   bump_version
   commit_with_message 'feat: another very fancy feature'
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-  override_ssh_secret_key_path_for_bind_mount
-  override_ssh_public_key_path_for_bind_mount
 
   run generate_in_docker -b
 
@@ -374,7 +364,7 @@ teardown() {
 
 ^- a very fancy feature ${generate_sha1_pattern}$"
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_output --partial "$generate_changelog_header"
   assert_pcre_match_output "$expected_output_pattern"
@@ -394,7 +384,7 @@ teardown() {
   merge_no_ff 'fix2'
   create_annotated_tag 'v0.2.0'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_pcre_match_output "$(merge_tests_expected_output_pattern)"
 }
@@ -410,7 +400,7 @@ teardown() {
   merge_no_ff 'fix2'
   create_annotated_tag 'v0.2.0'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_pcre_match_output "$(merge_tests_exepcted_output_pattern)"
 }
@@ -426,7 +416,7 @@ teardown() {
   commit_with_message 'chore: under the top commit'
   commit_with_message 'feat: top commit'
 
-  run generate_no_docker
+  run generate_in_docker
 
   refute assert_pcre_match_output "$(empty_commit_incorrect_pattern)"
 }
@@ -442,7 +432,7 @@ teardown() {
   commit_with_message 'fix: another urgent fix'
   create_annotated_tag 'v0.2.0'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_pcre_match_output "$(merge_tests_exepcted_output_pattern)"
 }
@@ -453,7 +443,7 @@ teardown() {
   commit_with_message 'fix!: a breaking fix'
   commit_with_message 'chore(deprecation)!: a breaking tidying'
 
-  run generate_no_docker
+  run generate_in_docker
 
   assert_pcre_match_output "^## \[Unreleased\]$"
   assert_pcre_match_output "^### chore$"
@@ -488,7 +478,7 @@ teardown() {
   bump_version
   commit_with_message 'revert: get back with the older test framework after all'
 
-  run generate_no_docker --bump-version
+  run generate_in_docker --bump-version
 
   assert_pcre_match_output "^## \[v0.1.10\]$"
 }
@@ -502,7 +492,7 @@ teardown() {
   commit_with_message 'feat: an awesome addition'
   commit_with_message 'test: tests are awesome'
 
-  run generate_no_docker --bump-version
+  run generate_in_docker --bump-version
 
   assert_pcre_match_output "^## \[v0.2.0\]$"
 }
@@ -524,7 +514,7 @@ BREAKING CHANGE: this test breaks the world"
 
 BREAKING-CHANGE: breaking fix of the ..."
 
-  run generate_no_docker --bump-version
+  run generate_in_docker --bump-version
 
   assert_pcre_match_output "^## \[v3.0.0\]$"
 }
@@ -543,132 +533,7 @@ BREAKING CHANGE: nope, you missed the breaking change
 
 DAMN-FOOTER:not interpreted"
 
-  run generate_no_docker --bump-version
+  run generate_in_docker --bump-version
 
   refute assert_pcre_match_output "^## \[v2.0.0\]$"
-}
-
-@test "generate in docker fails if there is pending changes in the targeted repository" {
-  create_git_repository
-  commit_with_message 'chore: First conventional chore commit'
-  touch pending.txt
-  git add pending.txt
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-
-  run -1 generate_in_docker
-
-  assert_output "$generate_error_pending_changes"
-}
-
-@test "generate in docker must fail if invoked outside of a git repository and the current directory is not a git repository and there is no argument specified" {
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-
-  run -1 generate_no_docker
-
-  assert_output "${generate_error_cannot_bind_git_repository}"
-}
-
-@test "generate in docker must succeed when invoked outside of a git repository, the current directory is not a git repository and the argument targets a git repository" {
-  create_git_repository_and_cd_in ../inner_git_dir
-  commit_with_message 'chore: a first commit'
-  cd -
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-  override_repository_directory_for_bind_mount_with ../inner_git_dir
-
-  run generate_in_docker -r ../inner_git_dir
-
-  assert_success
-}
-
-@test "generate in docker must succeed when outside of a git repository, the current directory is a git repository, with no argument specified" {
-  create_git_repository_and_cd_in ../inner_git_dir
-  commit_with_message 'chore: a first commit'
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-
-  run ../src/generate.sh
-
-  assert_success
-}
-
-@test "generate in docker must succeed when outside of a git repository, the current directory being a git repository and an argument target a git repository. The argument takes precedence" {
-  create_git_repository_and_cd_in ../other_git_dir
-  commit_with_message 'test: the argument git repository'
-  create_git_repository_and_cd_in ../yet_another_git_dir
-  commit_with_message 'test: the current directory git repository'
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-  override_repository_directory_for_bind_mount_with ../other_git_dir
-
-  run ../src/generate.sh -r ../other_git_dir
-
-  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
-}
-
-@test "generate in docker must succeed when within a git repository, the current directory is not a git repository and there is no argument specified" {
-  create_git_repository
-  commit_with_message 'fix: a fix commit'
-  cd ..
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-
-  run src/generate.sh
-
-  assert_success
-}
-
-@test "generate in docker must succeed when within a git repository, the current directory is not a git repository and there is an argument targeting a git repository. The argument takes precedence" {
-  create_git_repository
-  commit_with_message 'test: the script location git repository'
-  create_git_repository_and_cd_in ../other_git_dir
-  commit_with_message 'test: the argument git repository'
-  cd ..
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-  override_repository_directory_for_bind_mount_with other_git_dir
-
-  run src/generate.sh -r other_git_dir
-
-  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
-}
-
-@test "generate in docker must succeed when within a git repository, the current directory is a git repository and there is no argument specified. The current directory takes precedence" {
-  create_git_repository
-  commit_with_message 'test: the script location git repository'
-  create_git_repository_and_cd_in ../other_git_dir
-  commit_with_message 'test: the current directory git repository'
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-
-  run ../src/generate.sh
-
-  assert_pcre_match_output $'^### test$\n\n^- the current directory git repository '"${generate_sha1_pattern}$"
-}
-
-@test "generate in docker must succeeds when within a git repository, the current directory is a git repository and there is an argument targeting a git repository. The argument takes precedence" {
-  create_git_repository
-  commit_with_message 'test: the script location git repository'
-  create_git_repository_and_cd_in ../yet_another_git_dir
-  commit_with_message 'test: the argument git repository'
-  create_git_repository_and_cd_in ../other_git_dir
-  commit_with_message 'test: the current directory git repository'
-  override_script_directory_for_bind_mount
-  override_current_directory_for_bind_mount
-  override_repository_directory_for_bind_mount_with ../yet_another_git_dir
-
-  run ../src/generate.sh --git-repository ../yet_another_git_dir
-
-  assert_pcre_match_output $'^### test$\n\n^- the argument git repository '"${generate_sha1_pattern}$"
-}
-
-@test "generate correctly bump version no matter the option order" {
-  create_git_repository
-  commit_with_message 'feat: fancy feature'
-
-  run generate.sh -n -b
-
-  assert_pcre_match_output "^## \[v0.1.0\]$"
 }
