@@ -1,14 +1,7 @@
 #!/bin/sh
 
-setup_git_test_user_info_for_repository() {
-  git config user.email "bats@test.suite"
-  git config user.name "bats"
-}
-
 create_git_repository() {
   git init > /dev/null 2>&1
-
-  setup_git_test_user_info_for_repository
 }
 
 create_remote_git_repository_and_clone_it() {
@@ -25,8 +18,6 @@ create_remote_git_repository_and_clone_it() {
     >/dev/null 2>&1
 
   cd "${repository_name}"
-
-  setup_git_test_user_info_for_repository
 }
 
 commit_with_message() {

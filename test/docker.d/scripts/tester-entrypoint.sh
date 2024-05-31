@@ -125,6 +125,11 @@ setup_ssh_client() {
   && authorize_public_key_on_server
 }
 
+setup_git_test_user_info_for_repository() {
+  git config --global user.email "bats@test.suite"
+  git config --global user.name "bats"
+}
+
 run() {
   if [ "$argument_debug" = 'false' ]; then
     if [ "$argument_watch" = 'true' ]; then
@@ -143,6 +148,7 @@ run() {
 
 main() {
   parse_arguments "$@" \
+  && setup_git_test_user_info_for_repository \
   && setup_ssh_client \
   && run
 }
