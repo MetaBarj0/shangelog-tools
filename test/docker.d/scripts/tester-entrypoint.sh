@@ -97,12 +97,11 @@ generate_client_keys() {
   ssh-keygen -t rsa -q -N 'passphrase' -f /root/.ssh/id_rsa
 }
 
-scan_host_keys() {
+wait_for_ssh_server_readiness() {
   while ! ssh-keyscan \
     -t rsa \
     localhost \
-    > /root/.ssh/known_hosts \
-    2>/dev/null; do
+    2>/dev/null 1>&2; do
     sleep 1
   done
 }
@@ -132,7 +131,7 @@ EOF
 
 setup_ssh_client() {
   generate_client_keys \
-  && scan_host_keys \
+  && wait_for_ssh_server_readiness \
   && authorize_public_key_on_server \
   && start_ssh_agent
 }

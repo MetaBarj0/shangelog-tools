@@ -598,6 +598,18 @@ repository_has_remotes() {
   [ ! -z "${remotes_reported}" ]
 }
 
+get_remote_host() {
+  git remote get-url origin \
+    | sed -r 's/^git@//' \
+    | sed -r 's/:.+$//'
+}
+
+learn_remote_ssh_host() {
+  ssh-keyscan -t rsa "$(get_remote_host)" \
+    >/root/.ssh/known_hosts \
+    2>/dev/null
+}
+
 re_bump_version() {
   local version="$1"
   local changelog="$2"
@@ -609,7 +621,8 @@ re_bump_version() {
   git tag -am "bump version: ${version}" "${version}"
 
   if repository_has_remotes; then
-    git push origin >/dev/null 2>&1 \
+    learn_remote_ssh_host \
+    && git push origin >/dev/null 2>&1 \
     && git push origin --tags >/dev/null 2>&1
   fi
 }

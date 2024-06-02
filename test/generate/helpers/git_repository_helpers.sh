@@ -13,6 +13,10 @@ create_remote_git_repository_and_clone_it() {
     shangelog-tools-remote-git-repository-server \
     ./create-bare-repository-in.sh "${repository_path}"
 
+  # At this stage, we're simulating an existing repository thus, we do not have
+  # to knwo hosts to clone it. It forces us to scan for host key only when
+  # necessary that is at bump version time if asked.
+  GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' \
   git clone \
     git@localhost:"${repository_path}" \
     >/dev/null 2>&1
