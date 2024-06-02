@@ -29,6 +29,7 @@ generate_in_docker() {
   override_current_directory_for_bind_mount
   override_ssh_secret_key_path_for_bind_mount
   override_ssh_public_key_path_for_bind_mount
+  override_ssh_agent_sock_path_for_bind_mount
 
   generate.sh "$@"
 }
@@ -58,6 +59,10 @@ override_ssh_secret_key_path_for_bind_mount() {
 
 override_ssh_public_key_path_for_bind_mount() {
   export SSH_PUBLIC_KEY_PATH_OVERRIDE="${HOST_TESTER_SSH_DIR}/id_rsa.pub"
+}
+
+override_ssh_agent_sock_path_for_bind_mount() {
+  export SSH_AGENT_SOCK_PATH_OVERRIDE="${HOST_TESTER_SSH_DIR}/agent-sock"
 }
 
 override_repository_directory_for_bind_mount_with() {

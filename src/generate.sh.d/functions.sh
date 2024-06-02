@@ -53,12 +53,20 @@ get_ssh_secret_key_path() {
 
 get_ssh_public_key_path() {
   if [ -z "${SSH_PUBLIC_KEY_PATH_OVERRIDE}" ]; then
-    # TODO: check outside of test env, add option to customize it
+    # TODO: customize key path
     cd ~/.ssh >/dev/null 2>&1
     echo "$(pwd -P)/id_rsa.pub"
     cd - >/dev/null 2>&1
   else
     echo "${SSH_PUBLIC_KEY_PATH_OVERRIDE}"
+  fi
+}
+
+get_ssh_agent_sock_path() {
+  if [ -z "${SSH_AGENT_SOCK_PATH_OVERRIDE}" ]; then
+    echo "${SSH_AUTH_SOCK}"
+  else
+    echo "${SSH_AGENT_SOCK_PATH_OVERRIDE}"
   fi
 }
 
@@ -689,11 +697,13 @@ run_container() {
     -e GIT_COMMITTER_NAME="$(git config user.name)" \
     -e GIT_AUTHOR_EMAIL="$(git config user.email)" \
     -e GIT_COMMITTER_EMAIL="$(git config user.email)" \
+    -e SSH_AUTH_SOCK=/root/.ssh/agent-sock \
     -v "$(get_current_directory)":/root/current_directory \
     -v "$(get_script_directory)":/root/script_directory \
     -v "$(get_repository_directory)":/root/repository_directory \
     -v "$(get_ssh_secret_key_path)":/root/.ssh/id_rsa:ro \
     -v "$(get_ssh_public_key_path)":/root/.ssh/id_rsa.pub:ro \
+    -v "$(get_ssh_agent_sock_path)":/root/.ssh/agent-sock:ro \
     $image_id \
     /bin/ash \
     '-c' \

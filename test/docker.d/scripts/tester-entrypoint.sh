@@ -94,7 +94,7 @@ EOF
 }
 
 generate_client_keys() {
-  ssh-keygen -t rsa -q -N '' -f /root/.ssh/id_rsa
+  ssh-keygen -t rsa -q -N 'passphrase' -f /root/.ssh/id_rsa
 }
 
 scan_host_keys() {
@@ -119,10 +119,22 @@ authorize_public_key_on_server() {
     >/dev/null
 }
 
+start_ssh_agent() {
+  eval "$(ssh-agent -a /root/.ssh/agent-sock)" > /dev/null
+
+  expect >/dev/null << EOF
+spawn ssh-add /root/.ssh/id_rsa
+expect "Enter passphrase"
+send "passphrase\r"
+expect eof
+EOF
+}
+
 setup_ssh_client() {
   generate_client_keys \
   && scan_host_keys \
-  && authorize_public_key_on_server
+  && authorize_public_key_on_server \
+  && start_ssh_agent
 }
 
 setup_git_test_user_info_for_repository() {

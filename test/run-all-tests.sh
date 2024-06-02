@@ -76,6 +76,9 @@ cleanup() {
   docker image rm shangelog-tools-tester >/dev/null
   docker image rm shangelog-tools-remote-git-repository-server >/dev/null
   git clean -dfx "$(get_script_dir)/tester_bind_mount" >/dev/null
+
+  # git cannot remove socket files
+  rm -f "$(get_script_dir)/tester_bind_mount/.ssh/agent-sock"
 }
 
 main() {
