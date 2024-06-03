@@ -17,7 +17,7 @@ setup() {
   cp -r src "$BATS_TEST_TMPDIR"
   cd "$BATS_TEST_TMPDIR/src"
 
-  source generate.sh.d/strings.sh
+  . generate.sh.d/strings.sh
 
   PATH="${BATS_TEST_TMPDIR}/src:${PATH}"
 }

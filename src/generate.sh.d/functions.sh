@@ -73,7 +73,7 @@ get_ssh_agent_sock_path() {
 load_strings() {
   local script_dir="$1"
 
-  source "${script_dir}/generate.sh.d/strings.sh"
+  . "${script_dir}/generate.sh.d/strings.sh"
 }
 
 parse_arguments() {
@@ -165,7 +165,7 @@ generate_commit_type_content_for() {
   while read commit_sha1; do
     local commit_summary="$(show_commit_summary $commit_sha1)"
     local conventional_commit_header="^(${commit_type})${generate_conventional_commit_scope_title_regex}"
-    local sha1="$(echo ${commit_sha1} | cut -c 0-8)"
+    local sha1="$(echo ${commit_sha1} | cut -c 1-8)"
     local commit_line="$( \
       echo $commit_summary \
       | grep -E \
@@ -238,16 +238,26 @@ output_section_header() {
   echo $'\n'"## [$1]"
 }
 
+change_separator_for_read() {
+  local string="$1"
+  local separator="$2"
+
+  echo "${string}" \
+  | sed "s/${separator}/\n/g"
+}
+
 output_all_commit_type_paragraphs() {
   local changelog_compliant_commits="$1"
+  local commit_types="$(change_separator_for_read "${generate_conventional_commit_type_regex}" '|')"
 
-  while read -d '|' commit_type; do
-    local commit_type_header="$(generate_commit_type_header $commit_type)"
+  while read commit_type; do
     local commit_type_content="$(generate_commit_type_content_for $commit_type "${changelog_compliant_commits}")"
 
     if [ -z "${commit_type_content}" ]; then
       continue
     fi
+
+    local commit_type_header="$(generate_commit_type_header $commit_type)"
 
     eval "$(cat << EOF_eval
 local ${commit_type}_paragraph=\$(cat << EOF
@@ -259,17 +269,17 @@ EOF
 EOF_eval
     )"
   done << EOF_while
-$(echo $generate_conventional_commit_type_regex)|
+${commit_types}
 EOF_while
 
-  while read -d '|' commit_type; do
+  while read commit_type; do
     eval "local paragraph=\"\${${commit_type}_paragraph}\""
 
     [ -z "${paragraph}" ] && continue
 
     echo $'\n'"${paragraph}"
   done << EOF
-$(echo $generate_conventional_commit_type_regex)|
+${commit_types}
 EOF
 }
 

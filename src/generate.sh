@@ -10,7 +10,7 @@ get_script_directory_before_override() {
 load_functions() {
   local script_dir="$(get_script_directory_before_override)"
 
-  source "${script_dir}/generate.sh.d/functions.sh"
+  . "${script_dir}/generate.sh.d/functions.sh"
   load_strings "${script_dir}"
 }
 
