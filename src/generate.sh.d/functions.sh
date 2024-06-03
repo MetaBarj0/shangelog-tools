@@ -235,7 +235,8 @@ list_changelog_compliant_commits_from_and_up_to() {
 output_section_header() {
   local header_name="$1"
 
-  echo $'\n'"## [$1]"
+  echo "
+## [$1]"
 }
 
 change_separator_for_read() {
@@ -277,7 +278,8 @@ EOF_while
 
     [ -z "${paragraph}" ] && continue
 
-    echo $'\n'"${paragraph}"
+    echo "
+${paragraph}"
   done << EOF
 ${commit_types}
 EOF
