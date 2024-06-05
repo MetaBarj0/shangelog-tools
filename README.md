@@ -8,12 +8,6 @@ with care using the conventional commit convention and SemVer versioning.
 `generate.sh` can automatically produce a changelog regarding your repository
 content if you use the conventional commits convention.
 
-## Package tools
-
-`package-generate.sh` produce a single script you can install everywhere on
-your environment. It eases the usage of this tool not forcing you to clone this
-repository to use it.
-
 # WHO
 
 ## Generating changelogs
@@ -21,12 +15,6 @@ repository to use it.
 Any project developer, maintainer, ops.
 Also designed to be used within a pipeline managed by your CI/CD
 infrastructure.
-
-## Package tools
-
-Any developer who want to use these tools on at least one repository. Also
-designed to be used within a pipeline managed by your CI/CD infrastructure
-though in this case, cloning the repository is ok in a first place.
 
 # WHY
 
@@ -36,12 +24,6 @@ Because creating, amending, maintaining, fixing `CHANGELOG.md` file by hand is
 tedious, error prone and we've better things to do.
 Moreover, in some cases, it could be really complicated if not impossible
 (rebase scenarii for instance, bacause of commit sha1 changes).
-
-## Package tools
-
-To control the system wide installation and access of these tools without being
-forced to clone this repository or use this repository as submodule for each
-repository you want to track.
 
 # HOW
 
@@ -84,13 +66,6 @@ developing.
 Note that you cannot pass both `-w` and `-d` at the same time. Those arguments
 are mutually exclusive.
 
-## Package tools
-
-### TODO
-
-Run the `package-generate.sh` script to produce a single script you can install
-everywhere. Use the `--help` option to get usage information.
-
 # WHEN
 
 ## Generating changelogs
@@ -98,10 +73,3 @@ everywhere. Use the `--help` option to get usage information.
 - Each time you want to release, that is, as often as possible, ideally in a
   CI/CD environment.
 - After a rebase, when commit sha have changed.
-
-## Package tools
-
-As you wish, it's not mandatory. You can use the full feature set of these
-tools directly in this repository. Packaging tools maybe an interesting option
-if you want them system wide. Keep in mind however you'll have to manually
-handle any update of them as you'll lose the git repository.
