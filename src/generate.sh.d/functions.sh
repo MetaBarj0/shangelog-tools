@@ -402,11 +402,20 @@ Options:
       Do not invoke this script within a docker container. It is useful if you
       want to run it on a GNU environment because this script relies heavily on
       GNU tools.
+      Do note that you need to have following tools accessible on your machine
+      for generate.sh to work properly:
+      - git (of course...)
+      - a ssh client (for instance open ssh client)
+      - pcre grep (a grep on steroid supporting PCRE)
+      - bc (the basic calculator)
+      - a basic POSIX compliant shell (sh, ash, dash). bash is OK too but not
+        required for generate.sh to work.
       By design, this tool has been thought to be run on any platform that
       supports docker container execution. If this option is not specified, an
       image is built and a container is run using it. At the end of the
       invocation, everything is removed (but the build cache, for obvious
       performance reasons) as if this script was run on the host machine.
+      The image is based on alpine:edge.
 
 Examples:
 
@@ -414,11 +423,18 @@ Examples:
 
     ./generate.sh will print the changelog on the standard output.
 
+    ./generate.sh --no-docker executes 'generate.sh' directly on the host
+    machine and will print the changelog on the standard output.
+    Note that for this to work, the host machine must have required GNU tools
+    installed. See the '-n' or '--no-docker' option documentation for more
+    details.
+
     ./generate.sh -b will print the changelog on the standard output and bump
     the currently unreleased changes on the respository. Bumping the version
     means creating an annotated tag at the tip of the current branch. If this
     is the first time you bump the version and you do not specify the
-    --initial-version option, v0.1.0 will be used by default.
+    --initial-version option, v0.1.0 will be used by default. Note that this
+    new bump version commit will be pushed on origin remote.
 
     ./generate.sh -b -i v1.0.0 will print the changelog on the standard output
     and bump the currently unreleased changes on the respository to the
@@ -673,7 +689,7 @@ RUN \
 FROM base as dependencies
 RUN \
   --mount=type=cache,target=/var/cache/apk \
-  apk add bash git pcre-tools openssh-client
+  apk add git pcre-tools openssh-client bc
 
 FROM dependencies as prepare_volume
 WORKDIR /root
