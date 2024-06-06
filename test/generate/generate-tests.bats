@@ -29,7 +29,7 @@ teardown() {
 @test "generate fails with '1' if not targeting git repository" {
   run -1 generate_in_docker
 
-  assert_output "${generate_error_cannot_bind_git_repository}"
+  assert_output "$(generate_error_cannot_bind_git_repository)"
 }
 
 @test "generate fails if the git repository does not have any commit" {
@@ -37,7 +37,7 @@ teardown() {
 
   run -1 generate_in_docker
 
-  assert_output "${generate_error_no_commits}"
+  assert_output "$(generate_error_no_commits)"
 }
 
 @test "generate fails if there is pending changes in the targeted repository" {
@@ -48,7 +48,7 @@ teardown() {
 
   run -1 generate_in_docker
 
-  assert_output "$generate_error_pending_changes"
+  assert_output "$(generate_error_pending_changes)"
 }
 
 @test "generate fails if it does not find any conventional commit in the history" {
@@ -60,7 +60,7 @@ teardown() {
 
   run -1 generate_in_docker
 
-  assert_output "$generate_error_no_conventional_commit_found"
+  assert_output "$(generate_error_no_conventional_commit_found)"
 }
 
 @test "generate succeeds to create several unreleased chore entries change log" {
@@ -80,7 +80,7 @@ teardown() {
 
   run generate_in_docker
 
-  assert_output --partial "${generate_changelog_header}"
+  assert_output --partial "$(generate_changelog_header)"
   assert_pcre_match_output "${expected_output_pattern}"
 }
 
@@ -101,7 +101,7 @@ teardown() {
 
   run generate_in_docker
 
-  assert_output --partial "${generate_changelog_header}"
+  assert_output --partial "$(generate_changelog_header)"
   assert_pcre_match_output "${expected_output_pattern}"
 }
 
@@ -115,7 +115,7 @@ teardown() {
 
   run generate_in_docker
 
-  assert_output --partial "${generate_changelog_header}"
+  assert_output --partial "$(generate_changelog_header)"
   assert_pcre_match_output "^## \[Unreleased\]$
 
 ^### feat$
@@ -145,7 +145,7 @@ teardown() {
 
   run generate_in_docker
 
-  assert_output --partial "${generate_changelog_header}"
+  assert_output --partial "$(generate_changelog_header)"
   assert_output --partial "## [Unreleased]"
   assert_pcre_match_output $'^### revert$\n\n'"^- a revert commit ${generate_sha1_pattern}$"
   assert_pcre_match_output $'^### test$\n\n'"^- a test commit ${generate_sha1_pattern}$"
@@ -166,7 +166,7 @@ teardown() {
 
   run -1 generate_in_docker
 
-  assert_output "${generate_error_cannot_bind_git_repository}"
+  assert_output "$(generate_error_cannot_bind_git_repository)"
 }
 
 @test "generate must succeed when invoked outside of a git repository, the current directory is not a git repository and the argument targets a git repository" {
@@ -331,7 +331,7 @@ teardown() {
 
   run generate_in_docker -b
 
-  assert_output --partial "$generate_changelog_header"
+  assert_output --partial "$(generate_changelog_header)"
   assert_pcre_match_output "$expected_output_pattern"
 }
 
@@ -366,7 +366,7 @@ teardown() {
 
   run generate_in_docker
 
-  assert_output --partial "$generate_changelog_header"
+  assert_output --partial "$(generate_changelog_header)"
   assert_pcre_match_output "$expected_output_pattern"
 }
 

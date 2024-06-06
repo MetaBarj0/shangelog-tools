@@ -128,7 +128,7 @@ initialize_argument_default_values() {
 }
 
 ensure_arguments_are_valid() {
-  echo "$initial_version" | pcregrep "${generate_semver_regex}" > /dev/null
+  echo "$initial_version" | pcregrep "$(generate_semver_regex)" > /dev/null
 }
 
 ensure_current_directory_is_git_repository() {
@@ -164,7 +164,7 @@ generate_commit_type_content_for() {
 
   while read commit_sha1; do
     local commit_summary="$(show_commit_summary $commit_sha1)"
-    local conventional_commit_header="^(${commit_type})${generate_conventional_commit_scope_title_regex}"
+    local conventional_commit_header="^(${commit_type})$(generate_conventional_commit_scope_title_regex)"
     local sha1="$(echo ${commit_sha1} | cut -c 1-8)"
     local commit_line="$( \
       echo $commit_summary \
@@ -197,14 +197,14 @@ list_changelog_compliant_commits_reachable_from() {
 
   git rev-list \
     -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
+    "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
     "${end_rev}"
 }
 
 is_there_any_conventional_commit() {
   [ $(git rev-list \
         --count -E -i --grep \
-        "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
+        "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
         "$(git branch --show-current)") -gt 0 ]
 }
 
@@ -218,7 +218,7 @@ list_changelog_compliant_commits_from_rev_to_tip() {
 
   git rev-list \
     -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
+    "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
     HEAD "${rev_option}"
 }
 
@@ -228,7 +228,7 @@ list_changelog_compliant_commits_from_and_up_to() {
 
   git rev-list \
     -E -i --grep \
-    "^(${generate_conventional_commit_type_regex})${generate_conventional_commit_scope_title_regex}" \
+    "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
     "${begin_rev}" ^"${end_rev}"
 }
 
@@ -249,7 +249,7 @@ change_separator_for_read() {
 
 output_all_commit_type_paragraphs() {
   local changelog_compliant_commits="$1"
-  local commit_types="$(change_separator_for_read "${generate_conventional_commit_type_regex}" '|')"
+  local commit_types="$(change_separator_for_read "$(generate_conventional_commit_type_regex)" '|')"
 
   while read commit_type; do
     local commit_type_content="$(generate_commit_type_content_for $commit_type "${changelog_compliant_commits}")"
@@ -340,7 +340,7 @@ get_all_sorted_annotated_tags() {
 
 get_all_semver_tags_from_newest_to_oldest() {
   get_all_sorted_annotated_tags \
-  | pcregrep "${generate_semver_regex}" \
+  | pcregrep "$(generate_semver_regex)" \
   | tac
 }
 
@@ -385,7 +385,7 @@ show_commit_body() {
 
 is_it_breaking_commit_summary() {
   local commit_summary="$1"
-  local breaking_commit_summary_pattern="(${generate_conventional_commit_type_regex})${generate_conventional_breaking_commit_scope_title_regex}"
+  local breaking_commit_summary_pattern="($(generate_conventional_commit_type_regex))$(generate_conventional_breaking_commit_scope_title_regex)"
 
   echo "$commit_summary" | grep -E "${breaking_commit_summary_pattern}" >/dev/null
 }
@@ -435,7 +435,7 @@ bump_next_major() {
     return 1
   fi
 
-  local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
+  local major_number="$(get_latest_tag | sed -r 's/'$(generate_semver_regex)'/\1/')"
   local new_major_number="$(inc $major_number)"
   local semver="v${new_major_number}.0.0"
 
@@ -453,8 +453,8 @@ bump_next_minor() {
     return 1
   fi
 
-  local major_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1/')"
-  local minor_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\2/')"
+  local major_number="$(get_latest_tag | sed -r 's/'$(generate_semver_regex)'/\1/')"
+  local minor_number="$(get_latest_tag | sed -r 's/'$(generate_semver_regex)'/\2/')"
   local new_minor_number="$(inc $minor_number)"
   local semver="v${major_number}.${new_minor_number}.0"
 
@@ -468,8 +468,8 @@ bump_next_patch() {
     return 0
   fi
 
-  local patch_number="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\3/')"
-  local version_without_patch="$(get_latest_tag | sed -r 's/'${generate_semver_regex}'/\1.\2/')"
+  local patch_number="$(get_latest_tag | sed -r 's/'$(generate_semver_regex)'/\3/')"
+  local version_without_patch="$(get_latest_tag | sed -r 's/'$(generate_semver_regex)'/\1.\2/')"
   local new_patch_number="$(inc $patch_number)"
   local semver="v${version_without_patch}.${new_patch_number}"
 
@@ -498,7 +498,7 @@ ensure_targeting_git_repository() {
   || ensure_script_is_within_git_repository
 
   if [ $? -ne 0 ]; then
-    echo "${generate_error_cannot_bind_git_repository}" >&2
+    echo "$(generate_error_cannot_bind_git_repository)" >&2
     exit 1
   fi
 }
@@ -506,7 +506,7 @@ ensure_targeting_git_repository() {
 ensure_there_are_commits() {
   local commit_count=$(git rev-list --all | wc -l)
   if [ $commit_count -lt 1 ]; then
-    echo "${generate_error_no_commits}" >&2
+    echo "$(generate_error_no_commits)" >&2
     exit 1
   fi
 }
@@ -515,7 +515,7 @@ ensure_there_are_no_pending_changes() {
   local pending_changes="$(git status --porcelain=v1 -uno)"
 
   if [ ! -z "$pending_changes" ]; then
-    echo "${generate_error_pending_changes}" >&2
+    echo "$(generate_error_pending_changes)" >&2
 
     exit 1
   fi
@@ -523,7 +523,7 @@ ensure_there_are_no_pending_changes() {
 
 ensure_there_are_at_least_one_conventional_commit() {
   if ! is_there_any_conventional_commit; then
-    echo "${generate_error_no_conventional_commit_found}" >&2
+    echo "$(generate_error_no_conventional_commit_found)" >&2
     exit 1
   fi
 }
@@ -593,7 +593,7 @@ output_changelog() {
   && sections="$(generate_sections)" \
   && local changelog \
   && changelog="$(cat << EOF
-${generate_changelog_header}
+$(generate_changelog_header)
 ${sections}
 EOF
   )" \
