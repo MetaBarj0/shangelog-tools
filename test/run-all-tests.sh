@@ -33,9 +33,8 @@ build_remote_git_repository_server_image() {
 }
 
 start_remote_git_repository_server() {
-  # TODO: remove -it flags as soon as it works
   docker run \
-    --init --rm -d -it \
+    --init --rm -d \
     --name shangelog-tools-remote-git-repository-server \
     --network=host \
     shangelog-tools-remote-git-repository-server \
