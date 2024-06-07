@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.3]
+
+### chore
+
+- (generate) TODO cleaning [8c3e03f4]
+- (generate) error handling [560f606f]
+- (test) TODO addressing [cdbc4fe1]
+- docs and refactor [49315208]
+
+### docs
+
+- cleaning [96b9e5ac]
+
+### refactor
+
+- (generate) strings [f4189a62]
+- help [13176323]
+
+### perf
+
+- (tests) cleanup [f06b40db]
+
 ## [v0.1.2]
 
 ### fix
