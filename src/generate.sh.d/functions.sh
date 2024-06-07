@@ -76,6 +76,13 @@ load_strings() {
   . "${script_dir}/generate.sh.d/strings.sh"
 }
 
+initialize_argument_default_values() {
+  bump_version_asked='false'
+  initial_version='v0.1.0'
+  no_docker_asked='false'
+  from_ancestor=''
+}
+
 ensure_arguments_are_valid() {
   echo "$initial_version" \
   | pcregrep "$(generate_semver_regex)" > /dev/null \
@@ -88,7 +95,7 @@ parse_arguments() {
   initialize_argument_default_values
 
   local valid_args \
-  && valid_args="$(getopt -q -o br:i:hn --long bump-version,git-repository:,initial-version:,help,no-docker -- $@)"
+  && valid_args="$(getopt -q -o br:i:hn --long bump-version,git-repository:,initial-version:,help,no-docker,from-ancestor: -- $@)"
 
   if [ $? -ne 0 ]; then
     show_help 1
@@ -119,6 +126,10 @@ parse_arguments() {
         no_docker_asked='true'
         shift
         ;;
+      --from-ancestor)
+        from_ancestor="$2"
+        shift 2
+        ;;
       --)
         shift
         break
@@ -127,12 +138,6 @@ parse_arguments() {
   done
 
   ensure_arguments_are_valid
-}
-
-initialize_argument_default_values() {
-  bump_version_asked='false'
-  initial_version='v0.1.0'
-  no_docker_asked='false'
 }
 
 ensure_current_directory_is_git_repository() {
@@ -192,33 +197,82 @@ EOF
   echo "$commit_lines" | sed -E '/^$/d'
 }
 
+get_all_sorted_annotated_tags() {
+  # TODO: check if local could be moved to if control block
+  local filter
+
+  if [ -z "${from_ancestor}" ]; then
+    filter=
+  else
+    filter="--merge HEAD --no-merge ${from_ancestor}"
+  fi
+
+  git for-each-ref \
+    --format='%(objecttype) %(refname:short)' \
+    --sort='v:refname' \
+    ${filter} \
+  | grep tag \
+  | sed 's/^tag //'
+}
+
+get_all_semver_tags_from_newest_to_oldest() {
+  get_all_sorted_annotated_tags \
+  | pcregrep "$(generate_semver_regex)" \
+  | tac
+}
+
 get_latest_tag() {
   get_all_semver_tags_from_newest_to_oldest | head -n 1
 }
 
 list_changelog_compliant_commits_reachable_from() {
+  # TODO: duplicate code!
+  local filter
+
+  if [ -z "${from_ancestor}" ]; then
+    filter=''
+  else
+    filter="^${from_ancestor}"
+  fi
+
   local end_rev="$1"
 
   git rev-list \
     -E -i --grep \
     "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
-    "${end_rev}"
+    "${end_rev}" ${filter}
 }
 
 is_there_any_conventional_commit() {
+  local filter
+
+  if [ -z "${from_ancestor}" ]; then
+    filter="$(git branch --show-current)"
+  else
+    filter="HEAD ^${from_ancestor}"
+  fi
+
   [ $(git rev-list \
         --count -E -i --grep \
         "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
-        "$(git branch --show-current)") -gt 0 ]
+        ${filter}) -gt 0 ]
 }
 
 list_changelog_compliant_commits_from_rev_to_tip() {
+  local filter
+
+  if [ -z "${from_ancestor}" ]; then
+    filter="$(git branch --show-current)"
+  else
+    filter="^${from_ancestor}"
+  fi
+
   local rev="$1"
 
   [ ! -z "$rev" ] \
   && local rev_option \
   && rev_option="^${rev}" \
-  || rev_option="$(git branch --show-current)"
+  || rev_option=${filter}
 
   git rev-list \
     -E -i --grep \
@@ -332,20 +386,6 @@ generate_versioned_section() {
   && generate_versioned_section "$next_tags" "$next_lower_tag"
 
   return 0
-}
-
-get_all_sorted_annotated_tags() {
-  git for-each-ref \
-    --format='%(objecttype) %(refname:short)' \
-    --sort='v:refname' \
-  | grep tag \
-  | sed 's/^tag //'
-}
-
-get_all_semver_tags_from_newest_to_oldest() {
-  get_all_sorted_annotated_tags \
-  | pcregrep "$(generate_semver_regex)" \
-  | tac
 }
 
 generate_versioned_sections() {
@@ -508,7 +548,16 @@ ensure_targeting_git_repository() {
 }
 
 ensure_there_are_commits() {
-  local commit_count=$(git rev-list --all | wc -l)
+  local filter
+
+  if [ -z "$from_ancestor" ]; then
+    filter=--all
+  else
+    filter="HEAD ^${from_ancestor}"
+  fi
+
+  local commit_count=$(git rev-list --count ${filter})
+
   if [ $commit_count -lt 1 ]; then
     echo "$(generate_error_no_commits)" >&2
     exit 1

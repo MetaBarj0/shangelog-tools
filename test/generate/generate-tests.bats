@@ -537,3 +537,25 @@ DAMN-FOOTER:not interpreted"
 
   refute assert_pcre_match_output "^## \[v2.0.0\]$"
 }
+
+@test "generate can operate on part of a repository, from a given revision ancestor" {
+  create_git_repository
+  commit_with_message 'chore: initial commit'
+  commit_with_message 'feat: feature of the hype'
+  create_annotated_tag v20.24.2
+  commit_with_message 'fix: fixing the latest version'
+
+  run without_stderr generate_in_docker \
+    --bump-version \
+    --initial-version v5.0.0 \
+    --from-ancestor v20.24.2
+
+  refute assert_pcre_match_output "^## \[v20.24.2\]$"
+  refute assert_pcre_match_output "^### feat$"
+  refute assert_pcre_match_output "^### chore"
+  assert_pcre_match_output "^## \[v5.0.0\]$
+
+^### fix$
+
+^- fixing the latest version ${generate_sha1_pattern}$"
+}

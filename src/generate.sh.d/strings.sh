@@ -106,6 +106,13 @@ Options:
       performance reasons) as if this script was run on the host machine.
       The image is based on alpine:edge.
 
+  --from-ancestor
+
+      Instead of reading the whole history of the repository to generate the
+      changelog, start from the commit whose ancestor is specified. Useful in
+      the case you work with a fork of a project and do not want to follow the
+      original versionning scheme.
+
 Examples:
 
   Given you are in the generate.sh directory:
