@@ -24,6 +24,14 @@ print_test() {
   echo "<<<$@>>>" >&3
 }
 
+without_stderr() {
+  "$@" 2>/dev/null
+}
+
+without_stdout() {
+  "$@" >/dev/null
+}
+
 generate_in_docker() {
   override_script_directory_for_bind_mount
   override_current_directory_for_bind_mount

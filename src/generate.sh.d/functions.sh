@@ -41,11 +41,12 @@ get_repository_directory() {
 }
 
 get_ssh_secret_key_path() {
+  # TODO: try to export function instead of variables
   if [ -z "${SSH_SECRET_KEY_PATH_OVERRIDE}" ]; then
     # TODO: check outside of test env, add option to customize it
-    cd ~/.ssh >/dev/null 2>&1
+    cd ~/.ssh >/dev/null
     echo "$(pwd -P)/id_rsa"
-    cd - >/dev/null 2>&1
+    cd - >/dev/null
   else
     echo "${SSH_SECRET_KEY_PATH_OVERRIDE}"
   fi
@@ -54,9 +55,9 @@ get_ssh_secret_key_path() {
 get_ssh_public_key_path() {
   if [ -z "${SSH_PUBLIC_KEY_PATH_OVERRIDE}" ]; then
     # TODO: customize key path
-    cd ~/.ssh >/dev/null 2>&1
+    cd ~/.ssh >/dev/null
     echo "$(pwd -P)/id_rsa.pub"
-    cd - >/dev/null 2>&1
+    cd - >/dev/null
   else
     echo "${SSH_PUBLIC_KEY_PATH_OVERRIDE}"
   fi
@@ -74,6 +75,14 @@ load_strings() {
   local script_dir="$1"
 
   . "${script_dir}/generate.sh.d/strings.sh"
+}
+
+ensure_arguments_are_valid() {
+  echo "$initial_version" \
+  | pcregrep "$(generate_semver_regex)" > /dev/null \
+  || ( local exit_code=$? \
+       && echo $(generate_error_bump_version_not_semver) >&2 \
+       && exit $exit_code )
 }
 
 parse_arguments() {
@@ -127,18 +136,14 @@ initialize_argument_default_values() {
   no_docker_asked='false'
 }
 
-ensure_arguments_are_valid() {
-  echo "$initial_version" | pcregrep "$(generate_semver_regex)" > /dev/null
-}
-
 ensure_current_directory_is_git_repository() {
-  git status > /dev/null 2>&1
+  git status > /dev/null
 }
 
 ensure_script_is_within_git_repository() {
   if [ $? -ne 0 ]; then
     local script_dirname="$(dirname "$0")"
-    cd "$script_dirname" >/dev/null 2>&1
+    cd "$script_dirname" >/dev/null
   fi
 
   ensure_current_directory_is_git_repository
@@ -555,9 +560,7 @@ get_remote_host() {
 }
 
 learn_remote_ssh_host() {
-  ssh-keyscan -t rsa "$(get_remote_host)" \
-    >/root/.ssh/known_hosts \
-    2>/dev/null
+  ssh-keyscan -t rsa "$(get_remote_host)" >/root/.ssh/known_hosts
 }
 
 re_bump_version() {
@@ -572,8 +575,8 @@ re_bump_version() {
 
   if repository_has_remotes; then
     learn_remote_ssh_host \
-    && git push origin >/dev/null 2>&1 \
-    && git push origin --tags >/dev/null 2>&1
+    && git push origin >/dev/null \
+    && git push origin --tags >/dev/null
   fi
 }
 
@@ -638,8 +641,7 @@ craft_container_commands_with() {
 ssh-keyscan \
   -t rsa \
   localhost \
-  > /root/.ssh/known_hosts \
-  2>/dev/null
+  > /root/.ssh/known_hosts
 
 /root/script_directory/generate.sh \
   $@ \
@@ -682,6 +684,7 @@ remove_image() {
   docker image rm $image_id >/dev/null
 }
 
+# EXPLAIN
 # specific substitute to getopt that is not the same on all platforms
 # I need to evaluate this option to know if I have to show the help at once
 # before getting into a container.
@@ -697,6 +700,7 @@ show_help_if_required() {
   done
 }
 
+# EXPLAIN
 # specific substitute to getopt that is not the same on all platforms
 # I need to evaluate this option to know if I have to run a container
 is_no_docker_option_missing() {
@@ -709,6 +713,7 @@ is_no_docker_option_missing() {
   done
 }
 
+# EXPLAIN
 # specific substitute to getopt that is not the same on all platforms
 # I need to evaluate this option to know how to bind volumes on the container I
 # need to run
@@ -717,9 +722,9 @@ parse_git_repository_option() {
     if [ "$1" = '-r' ] || [ "$1" = '--git-repository' ];then
       shift
 
-      cd "$1" >/dev/null 2>&1
+      cd "$1" >/dev/null
       git_repository_directory="$(pwd -P)"
-      cd - >/dev/null 2>&1
+      cd - >/dev/null
 
       return 0
     fi

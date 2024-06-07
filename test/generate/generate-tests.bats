@@ -29,15 +29,15 @@ teardown() {
 @test "generate fails with '1' if not targeting git repository" {
   run -1 generate_in_docker
 
-  assert_output "$(generate_error_cannot_bind_git_repository)"
+  assert_output --partial "$(generate_error_cannot_bind_git_repository)"
 }
 
 @test "generate fails if the git repository does not have any commit" {
   create_git_repository
 
-  run -1 generate_in_docker
+  run -1 without_stdout generate_in_docker
 
-  assert_output "$(generate_error_no_commits)"
+  assert_output --partial "$(generate_error_no_commits)"
 }
 
 @test "generate fails if there is pending changes in the targeted repository" {
@@ -46,9 +46,9 @@ teardown() {
   touch pending.txt
   git add pending.txt
 
-  run -1 generate_in_docker
+  run -1 without_stdout generate_in_docker
 
-  assert_output "$(generate_error_pending_changes)"
+  assert_output --partial "$(generate_error_pending_changes)"
 }
 
 @test "generate fails if it does not find any conventional commit in the history" {
@@ -58,9 +58,9 @@ teardown() {
   commit_with_message 'chore:       too much spaces'
   commit_with_message 'chore(scope):       too much spaces'
 
-  run -1 generate_in_docker
+  run -1 without_stdout generate_in_docker
 
-  assert_output "$(generate_error_no_conventional_commit_found)"
+  assert_output --partial "$(generate_error_no_conventional_commit_found)"
 }
 
 @test "generate succeeds to create several unreleased chore entries change log" {
@@ -166,7 +166,7 @@ teardown() {
 
   run -1 generate_in_docker
 
-  assert_output "$(generate_error_cannot_bind_git_repository)"
+  assert_output --partial "$(generate_error_cannot_bind_git_repository)"
 }
 
 @test "generate must succeed when invoked outside of a git repository, the current directory is not a git repository and the argument targets a git repository" {
@@ -315,9 +315,9 @@ teardown() {
   create_git_repository
   commit_with_message 'feat: a very fancy feature'
 
-  run -1 generate_in_docker --bump-version --initial-version=wip_non_semver
+  run -1 without_stdout generate_in_docker --bump-version --initial-version=wip_non_semver
 
-  assert_output "${generate_error_bump_version_not_semver}"
+  assert_output --partial "$(generate_error_bump_version_not_semver)"
 }
 
 @test "generate output a versioned changelog after a bump" {
@@ -341,7 +341,7 @@ teardown() {
   bump_version
   commit_with_message 'feat: another very fancy feature'
 
-  run generate_in_docker -b
+  run without_stderr generate_in_docker -b
 
   assert_changelog_commit_at_tip
   assert_same_tip_commit_local_remote

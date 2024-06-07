@@ -19,6 +19,10 @@ generate_error_no_conventional_commit_found() {
   echo 'Error: no conventional commit found to generate the change log'
 }
 
+generate_error_bump_version_not_semver() {
+  echo 'Error: initial version value must follow the SemVer convention.'
+}
+
 generate_conventional_commit_type_regex() {
   echo 'fix|feat|build|chore|ci|docs|style|refactor|perf|test|revert'
 }

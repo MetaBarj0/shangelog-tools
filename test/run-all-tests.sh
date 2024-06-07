@@ -1,17 +1,17 @@
 #!/bin/sh
 
 get_script_dir() {
-  cd "$(dirname $0)" 2>&1 >/dev/null
+  cd "$(dirname $0)" >/dev/null
 
   echo "$(pwd)"
 
-  cd - 2>&1 >/dev/null
+  cd - >/dev/null
 }
 
 clone_bats() {
-  cd "$(get_script_dir)/.." 2>&1 >/dev/null
+  cd "$(get_script_dir)/.." >/dev/null
   git submodule --quiet update --init --recursive
-  cd - 2>&1 >/dev/null
+  cd - >/dev/null
 }
 
 build_tester_image() {

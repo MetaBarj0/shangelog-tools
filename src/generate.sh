@@ -2,9 +2,9 @@
 
 get_script_directory_before_override() {
   local script_dirname="$(dirname "$0")"
-  cd "$script_dirname" >/dev/null 2>&1
+  cd "$script_dirname" >/dev/null
   pwd -P
-  cd - >/dev/null 2>&1
+  cd - >/dev/null
 }
 
 load_functions() {
