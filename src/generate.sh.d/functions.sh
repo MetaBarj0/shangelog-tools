@@ -41,7 +41,6 @@ get_repository_directory() {
 }
 
 get_ssh_secret_key_path() {
-  # TODO: try to export function instead of variables
   if [ -z "${SSH_SECRET_KEY_PATH_OVERRIDE}" ]; then
     # TODO: check outside of test env, add option to customize it
     cd ~/.ssh >/dev/null
