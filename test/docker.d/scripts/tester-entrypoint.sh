@@ -100,8 +100,7 @@ generate_client_keys() {
 wait_for_ssh_server_readiness() {
   while ! ssh-keyscan \
     -t rsa \
-    localhost \
-    2>/dev/null 1>&2; do
+    localhost; do
     sleep 1
   done
 }

@@ -74,12 +74,11 @@ override_ssh_agent_sock_path_for_bind_mount() {
 }
 
 override_repository_directory_for_bind_mount_with() {
-  # TODO: ensure there are no 2>/dev/null anymore
-  cd "$1" >/dev/null 2>&1
+  cd "$1" >/dev/null
 
   local path="$(pwd -P)"
 
-  cd - >/dev/null 2>&1
+  cd - >/dev/null
 
   local repository_directory="$(override_test_directory_bind_mount_with "${path}")"
 

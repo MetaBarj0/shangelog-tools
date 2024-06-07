@@ -198,14 +198,8 @@ EOF
 }
 
 get_all_sorted_annotated_tags() {
-  # TODO: check if local could be moved to if control block
-  local filter
-
-  if [ -z "${from_ancestor}" ]; then
-    filter=
-  else
-    filter="--merge HEAD --no-merge ${from_ancestor}"
-  fi
+  [ ! -z "${from_ancestor}" ] \
+  && local filter="--merge HEAD --no-merge ${from_ancestor}"
 
   git for-each-ref \
     --format='%(objecttype) %(refname:short)' \
@@ -226,31 +220,22 @@ get_latest_tag() {
 }
 
 list_changelog_compliant_commits_reachable_from() {
-  # TODO: duplicate code!
-  local filter
-
-  if [ -z "${from_ancestor}" ]; then
-    filter=''
-  else
-    filter="^${from_ancestor}"
-  fi
-
   local end_rev="$1"
+
+  [ -z "${from_ancestor}" ] \
+  && local filter="${end_rev}" \
+  || local filter="${end_rev} ^${from_ancestor}"
 
   git rev-list \
     -E -i --grep \
     "^($(generate_conventional_commit_type_regex))$(generate_conventional_commit_scope_title_regex)" \
-    "${end_rev}" ${filter}
+    ${filter}
 }
 
 is_there_any_conventional_commit() {
-  local filter
-
-  if [ -z "${from_ancestor}" ]; then
-    filter="$(git branch --show-current)"
-  else
-    filter="HEAD ^${from_ancestor}"
-  fi
+  [ -z "${from_ancestor}" ] \
+  && local filter="$(git branch --show-current)" \
+  || local filter="HEAD ^${from_ancestor}"
 
   [ $(git rev-list \
         --count -E -i --grep \
@@ -259,20 +244,15 @@ is_there_any_conventional_commit() {
 }
 
 list_changelog_compliant_commits_from_rev_to_tip() {
-  local filter
-
-  if [ -z "${from_ancestor}" ]; then
-    filter="$(git branch --show-current)"
-  else
-    filter="^${from_ancestor}"
-  fi
+  [ -z "${from_ancestor}" ] \
+  && local filter="$(git branch --show-current)" \
+  || local filter="^${from_ancestor}"
 
   local rev="$1"
 
   [ ! -z "$rev" ] \
-  && local rev_option \
-  && rev_option="^${rev}" \
-  || rev_option=${filter}
+  && local rev_option="^${rev}" \
+  || local rev_option=${filter}
 
   git rev-list \
     -E -i --grep \
@@ -548,13 +528,9 @@ ensure_targeting_git_repository() {
 }
 
 ensure_there_are_commits() {
-  local filter
-
-  if [ -z "$from_ancestor" ]; then
-    filter=--all
-  else
-    filter="HEAD ^${from_ancestor}"
-  fi
+  [ -z "$from_ancestor" ] \
+  && local filter=--all \
+  || local filter="HEAD ^${from_ancestor}"
 
   local commit_count=$(git rev-list --count ${filter})
 

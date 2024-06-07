@@ -1,7 +1,7 @@
 #!/bin/sh
 
 create_git_repository() {
-  git init > /dev/null 2>&1
+  git init > /dev/null
 }
 
 create_remote_git_repository_and_clone_it() {
@@ -19,7 +19,7 @@ create_remote_git_repository_and_clone_it() {
   GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' \
   git clone \
     git@localhost:"${repository_path}" \
-    >/dev/null 2>&1
+    >/dev/null
 
   cd "${repository_name}"
 }
@@ -29,8 +29,8 @@ commit_with_message() {
 
   echo "$message" >> messages
 
-  git add messages > /dev/null 2>&1
-  git commit -m "$message" > /dev/null 2>&1
+  git add messages > /dev/null
+  git commit -m "$message" > /dev/null
 }
 
 commit_with_message_and_push_to_remote() {
@@ -53,7 +53,7 @@ create_annotated_tag() {
 switch_to_branch() {
   local branch_name="$1"
 
-  if ! git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+  if ! git rev-parse --verify "$branch_name" >/dev/null; then
     git checkout -b "$branch_name"
   else
     git switch "$branch_name"
@@ -68,5 +68,5 @@ merge_no_ff() {
 }
 
 push_to_remote() {
-  git push -u origin master >/dev/null 2>&1
+  git push -u origin master >/dev/null
 }

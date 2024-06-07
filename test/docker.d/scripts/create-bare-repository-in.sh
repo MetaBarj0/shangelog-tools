@@ -9,7 +9,7 @@ main() {
 
   cd "${repository_path}"
 
-  git init --bare >/dev/null 2>&1
+  git init --bare >/dev/null
 
   chown -R git:git "/home/git/${repository_path}"
 }
