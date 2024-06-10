@@ -91,6 +91,14 @@ ensure_arguments_are_valid() {
        && exit $exit_code )
 }
 
+show_help() {
+  local exit_code="${1:-0}"
+
+  echo "$(generate_help)"
+
+  exit $exit_code
+}
+
 parse_arguments() {
   initialize_argument_default_values
 
@@ -381,14 +389,6 @@ generate_versioned_sections() {
 generate_sections() {
   generate_unreleased_section \
   && generate_versioned_sections
-}
-
-show_help() {
-  local exit_code="${1:-0}"
-
-  echo "${generate_help}"
-
-  exit $exit_code
 }
 
 is_repository_already_versionned() {
