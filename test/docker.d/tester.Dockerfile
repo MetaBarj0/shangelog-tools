@@ -16,6 +16,7 @@ VOLUME /root/ringover-shangelog-tools
 WORKDIR /root/ringover-shangelog-tools
 
 FROM prepare_volume as setup_entrypoint
+USER root
 COPY scripts/tester-entrypoint.sh /root
 COPY scripts/watch-and-run-test-suites-in-parallel.sh /root
 ENTRYPOINT ["/root/tester-entrypoint.sh"]
