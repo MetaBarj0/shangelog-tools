@@ -1,4 +1,4 @@
-FROM alpine:latest AS base
+FROM alpine:edge AS base
 RUN \
   --mount=type=cache,target=/var/cache/apk \
   apk update

@@ -630,7 +630,7 @@ EOF
 
 build_image() {
   local image_id=$(docker build -q - << EOF
-FROM alpine:latest as base
+FROM alpine:edge as base
 RUN \
   --mount=type=cache,target=/var/cache/apk \
   apk update
