@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.2]
+
+### chore
+
+- (tests) maintainabilty [8a608e39]
+- (test) tidying [e1e960cb]
+- (intentionality) image version [ffd748d0]
+- (tests) maintainability [12e7691a]
+- (tests) maintainability [0f36b758]
+
 ## [v0.2.1]
 
 ### fix
