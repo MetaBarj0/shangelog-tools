@@ -15,7 +15,6 @@ RUN usermod -p '*' git
 WORKDIR /home/git
 USER git
 RUN mkdir .ssh
-USER root
 
 FROM create_git_user AS setup_entrypoint
 USER root
